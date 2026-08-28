@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=LyndsOS
+Description=Arranque de LyndsOS 1.0
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes//lyndsos
+ScriptFile=/usr/share/plymouth/themes//lyndsos/lyndsos.script
