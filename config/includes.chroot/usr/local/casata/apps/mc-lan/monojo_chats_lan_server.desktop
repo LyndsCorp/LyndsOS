@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Monojo Chats LAN Servidor
+Type=Application
+Icon=monojo-server
+Categories=Network;Chat;InstantMessaging;Office;Development;
+Comment=Crear servidor de chat en LAN.
+GenericName=Aplicación de mensajería instantanea
+Exec=mc-lan-ser
+StartupWMClass=server
+Terminal=false

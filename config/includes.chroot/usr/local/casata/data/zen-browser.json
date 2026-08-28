@@ -1,0 +1,9 @@
+{
+  "name": "zen-browser",
+  "version": "1.21.8",
+  "apt": [],
+  "pip": [],
+  "size": "489.3 MiB",
+  "description": "Navegador de internet privado, personalizable y muy moderno.",
+  "usage": "Abre Zen Browser desde tu lanzador de aplicaciones."
+}

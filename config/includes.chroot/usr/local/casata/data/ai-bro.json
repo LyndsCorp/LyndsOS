@@ -1,0 +1,9 @@
+{
+  "name": "ai-bro",
+  "version": "1.0",
+  "apt": ["python3"],
+  "pip": ["google-generativeai", "rich", "prompt_toolkit", "openai", "anthropic", "mistralai", "ollama"],
+  "size": "76.5 KiB",
+  "description": "¡Una IA TUI que puede ejecutar comandos y puedes hablar con ella! Permite varios proveedores de IA y los conectas con una API key de IA.",
+  "usage": "¡Ejecuta ai-bro en la terminal y tendrás a tu bro de IA listo para trabajar en la carpeta en la que lo ejecutaste!."
+}

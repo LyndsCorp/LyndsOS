@@ -1,0 +1,42 @@
+{
+  "links": [
+    {
+      "file": "client.py",
+      "dest": "/usr/bin",
+      "name": "mc-lan-cli",
+      "executable": true
+    },
+    {
+      "file": "server.py",
+      "dest": "/usr/bin",
+      "name": "mc-lan-ser",
+      "executable": true
+    },
+    {
+      "file": "mc-lan.sh",
+      "dest": "/usr/bin",
+      "name": "mc-lan",
+      "executable": true
+    },
+    {
+      "file": "monojo-azul.png",
+      "dest": "/usr/share/icons/hicolor/512x512/apps",
+      "name": "monojo-azul.png"
+    },
+    {
+      "file": "monojo-server.png",
+      "dest": "/usr/share/icons/hicolor/512x512/apps",
+      "name": "monojo-server.png"
+    },
+    {
+      "file": "monojo_chats_lan_client.desktop",
+      "dest": "/usr/share/applications",
+      "name": "mc_lan_client.desktop"
+    },
+    {
+      "file": "monojo_chats_lan_server.desktop",
+      "dest": "/usr/share/applications",
+      "name": "mc_lan_server.desktop"
+    }
+  ]
+}

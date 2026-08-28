@@ -1,0 +1,41 @@
+         CASATA HELP
+==================================
+
+COMANDOS (resumen):
+
+  add singrepo <URL>      → Añade un paquete individual
+  add repo <URL>          → Añade un metarepositorio
+  add oficial             → Usa el repositorio maestro
+
+  install <pkg...> [-y] [-d] [--user]
+  remove  <pkg...> [-y] [--user]
+
+  list [-v] [-d]          → Muestra instalados (versión/descripción)
+
+  info <pkg> [-l] [-r]    → Datos del paquete (licencia/readme)
+
+  search <texto>          → Busca en la base de datos local
+
+  update                  → Actualiza índices de repositorios
+
+  upgrade [-y] [--user|--system] → Actualiza paquetes instalados
+
+  history [--lines N] [--clear] [--disable|--enable] [--user nom]
+                          → Historial de operaciones
+
+  clean                   → Elimina huérfanos (singrepos/datos no referenciados)
+
+  show                    → Resumen de apps instaladas (sistema + usuario)
+
+OPCIONES COMUNES:
+  -y          → responde "sí" a todo
+  --user      → opera en ámbito de usuario (~/.local/casata)
+  -d          → solo descarga (install)
+  -l / -r     → licencia / readme (info)
+  -v / -d     → versión / descripción (list)
+
+RUTAS:
+  Global: /usr/local/casata/{apps,data,repos}
+  Usuario: ~/.local/casata/apps
+
+Requiere sudo para operaciones globales.

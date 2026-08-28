@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Cava
+Comment=Visualizador de audio super épico en terminal.
+Exec=cava
+Icon=applications-multimedia
+Terminal=true
+Categories=AudioVideo;Audio

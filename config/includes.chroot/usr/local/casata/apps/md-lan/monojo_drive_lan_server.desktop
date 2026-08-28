@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Monojo Drive LAN Servidor
+Type=Application
+Icon=monojo-server
+Categories=Office;Development;Network;
+Comment=Crear un servidor drive en LAN.
+GenericName=Servidor drive en LAN
+Exec=md-lan-ser
+StartupWMClass=server
+Terminal=false

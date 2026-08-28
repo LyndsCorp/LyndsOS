@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Lynds Wallpapers Installer
+Comment=Descargar fondos de pantalla libres
+Exec=lynds-wallpapers-installer
+Icon=lynds-wallpapers
+Terminal=false
+Categories=Graphics;Utility;
+StartupNotify=true

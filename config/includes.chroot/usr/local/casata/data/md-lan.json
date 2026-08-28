@@ -1,0 +1,9 @@
+{
+  "name": "md-lan",
+  "version": "2.0",
+  "apt": ["python3", "python3-pil", "python3-tk"],
+  "pip": [],
+  "size": "266.6 KiB",
+  "description": "Drive en LAN sin depender de servidores externos, solo de estar en la misma red. Así no necesitas pasar archivos por pendrive. md-lan significa Monojo Drive LAN.",
+  "usage": "Ejecuta md-lan-cli para conectarte a un servidor y md-lan-ser para crear el servidor."
+}

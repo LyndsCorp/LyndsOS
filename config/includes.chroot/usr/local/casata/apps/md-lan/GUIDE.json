@@ -1,0 +1,42 @@
+{
+  "links": [
+    {
+      "file": "client.py",
+      "dest": "/usr/bin",
+      "name": "md-lan-cli",
+      "executable": true
+    },
+    {
+      "file": "server.py",
+      "dest": "/usr/bin",
+      "name": "md-lan-ser",
+      "executable": true
+    },
+    {
+      "file": "md-lan.sh",
+      "dest": "/usr/bin",
+      "name": "md-lan",
+      "executable": true
+    },
+    {
+      "file": "monojo-verde.png",
+      "dest": "/usr/share/icons/hicolor/512x512/apps",
+      "name": "monojo-verde.png"
+    },
+    {
+      "file": "monojo-server.png",
+      "dest": "/usr/share/icons/hicolor/512x512/apps",
+      "name": "monojo-server.png"
+    },
+    {
+      "file": "monojo_drive_lan_client.desktop",
+      "dest": "/usr/share/applications",
+      "name": "monojo_drive_lan_client.desktop"
+    },
+    {
+      "file": "monojo_drive_lan_server.desktop",
+      "dest": "/usr/share/applications",
+      "name": "monojo_drive_lan_server.desktop"
+    }
+  ]
+}

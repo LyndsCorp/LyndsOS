@@ -1,0 +1,58 @@
+#!/bin/sh
+exec tail -n +3 $0
+
+#Script escrito por David Baña Szymaniak, Licencia MIT 2026: haz lo que quieras con este script, pero dame créditos si lo publicas modificado o lo redistribuyes
+
+#Esas 2 primeras lineas son OBLIGATORIAS; no las quites
+#El nombre de la entrada en GRUB es lo que esta entre comillas en menuentry
+
+# Si usas discos relativos (recomendado)
+#En el search --fs-uuid --set=root UUID-AQUI pon el UUID del disco en UUID-AQUI.
+#Para ver el UUID del disco, escribe el comando lsblk -f. La salida será esta:
+#
+#david@lyndsos:~$ lsblk -f
+#NAME         FSTYPE   FSVER LABEL       UUID                                 FSAVAIL FSUSE% MOUNTPOINTS
+#nvme0n1
+#├─nvme0n1p1  vfat     FAT32 ESP         2746-644A
+#└─nvme0n1p2  ext4     1.0   BaseDeDatos 643a3de0e-fb17-4d72-a3f2-cw9abc9fe43e
+#
+#En la segunda partición de mi disco se puede ver en la columna UUID que su UUID es 643a3de0e-fb17-4d72-a3f2-cw9abc9fe43e.
+#Tienes que cambiar UUID-AQUI por ese UUID.
+
+# Si usas discos absolutos (no recomendado porque al conectar un pendrive al encender el ordenador, deja de funcionar):
+#En el set root, donde pone gptX, cambia X por el numero de la particion
+#En linux donde pone root=... lo mismo con el numero de la particion
+#En linux pon el vmlinuz con el nombre exacto que el que hay en la carpeta /boot
+#En initrd igual que con linux
+
+#Protip: puedes añadir entradas que no solo sean de arranque, como la entrada que no comenté de apagar el ordenador
+#Consejo: si al arrancar alguno te pone "Please, load the kernel first", tienes que asegurarte de que el archivo que pusiste en linux y el que pusiste en initrd sean los correctos
+
+#La parte de al final de linux que dice "ro quiet" signica: arranca mostrando los logs (verbose). Si quieres que no salgan letras al arrancar porque da miedito o quieres que se vea bonito, en las entradas pon "splash" al final. Mira el ejemplo en la linea 24
+
+# Entrada base con discos absolutos, comentada para que la modifiques
+#menuentry "Algo" {
+    #set root=(hd0,gptX)
+    #linux /boot/NombreExactoDelKernel root=/dev/nvme0n1pX ro quiet
+    #initrd /boot/NombreExactoDelInitrd
+#}
+
+# Entrada base con discos relativos al UUID, comentada para que la modifiques
+#menuentry "Sistema operativo con UUID" {
+    #search --fs-uuid --set=root UUID-AQUI
+    #linux /boot/NombreExactoDelKernel root=UUID=UUID-AQUI ro quiet splash #splash es lo del plymouth (animación de arranque, nada de logs)
+    #initrd /boot/NombreExactoDelInitrd
+#}
+
+# Una cosa, donde pone /boot/ALGO, puedes quitar el /boot y poner el nombre genérico solo si tu distro crea un symlink al kernel o al initrd en la raiz. Ejemplo:
+#menuentry "Sistema operativo con UUID" {
+    #linux /vmlinuz ALGO=ALGO COSA COSA
+    #initrd /initrd
+#}
+
+menuentry "Apagar ordenador" {
+    echo "Apagando sistema..."
+    halt
+}
+
+# Ya hasta parece una documentacion entera... Bueno, asi no te olvidas de nada :)

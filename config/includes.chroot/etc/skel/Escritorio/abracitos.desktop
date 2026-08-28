@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Instalar Sistema Operativo
+Comment=Abracitos, el instalador de LyndsOS
+Exec=sudo abracitos
+Icon=lyndsos
+Terminal=false
+Categories=System;
+StartupNotify=true
+StartupWMClass=abracitos_main

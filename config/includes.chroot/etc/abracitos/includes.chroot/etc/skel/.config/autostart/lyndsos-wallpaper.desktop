@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Activar el wallpaper por defecto de LyndsOS
+Exec=set-lyndsos-wallpaper
+X-KDE-AutostartScript=true
+OnlyShowIn=KDE;

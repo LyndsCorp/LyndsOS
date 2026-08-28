@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Monojo Welcomer
+Comment=Bienvenida a LyndsOS
+Exec=monojo-welcomer
+Icon=monojo
+Terminal=false
+Categories=Documentation;KDE;Qt;Help;

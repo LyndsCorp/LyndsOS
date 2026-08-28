@@ -1,0 +1,9 @@
+{
+  "name": "fe",
+  "version": "1.0",
+  "apt": [],
+  "pip": [],
+  "size": "1.13 MB",
+  "description": "Fragmento Estelar (FE) es un instalador de sistemas operativos.",
+  "usage": "Ejecuta `fe --help` para aprender cómo se usa."
+}

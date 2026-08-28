@@ -1,0 +1,26 @@
+{
+  "links": [
+    {
+      "file": "lynds_wallpapers_installer.py",
+      "dest": "/usr/bin",
+      "name": "lynds-wallpapers-installer",
+      "executable": true
+    },
+    {
+      "file": "lynds_wallpapers_installer.py",
+      "dest": "/usr/bin",
+      "name": "lynds-wallpapers",
+      "executable": true
+    },
+    {
+      "file": "icon.png",
+      "dest": "/usr/share/icons/hicolor/256x256/apps",
+      "name": "lynds-wallpapers.png"
+    },
+    {
+      "file": "lynds_wallpapers_installer.desktop",
+      "dest": "/usr/share/applications",
+      "name": "lynds_wallpapers_installer.desktop"
+    }
+  ]
+}

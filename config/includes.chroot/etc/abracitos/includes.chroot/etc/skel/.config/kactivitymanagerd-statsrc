@@ -1,0 +1,5 @@
+[Favorites-org.kde.plasma.kickoff.favorites.instance-3-ff1da13c-b630-4690-879f-e16414976474]
+ordering=applications:org.kde.discover.desktop,applications:org.kde.kinfocenter.desktop,applications:org.kde.konsole.desktop,applications:org.kde.partitionmanager.desktop,applications:systemsettings.desktop
+
+[Favorites-org.kde.plasma.kickoff.favorites.instance-3-global]
+ordering=applications:org.kde.discover.desktop,applications:org.kde.kinfocenter.desktop,applications:org.kde.konsole.desktop,applications:org.kde.partitionmanager.desktop,applications:systemsettings.desktop

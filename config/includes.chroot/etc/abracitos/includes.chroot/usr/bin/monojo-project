@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# GPL v3 License - 2026 Monojo Project
+# Script creado por David Baña Szymaniak
+
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    echo ""
+    echo "Monojo Project Help"
+    echo ""
+    echo "Uso:"
+    
+    echo "  Monojo Drive LAN"
+    echo "    md-lan-cli: Abre cliente gráfico que sirve para conectarse a la sala y subir archivos o descargar."
+    echo "    md-lan-ser: Abre el servidor gráfico que sirve para crear la sala y seleccionar una carpeta para el drive. También elige quien entra y quien no."
+    echo ""
+    
+    echo "  Monojo Chats LAN"
+    echo "    mc-lan-cli: Abre cliente gráfico que sirve para conectarse a la sala para chatear."
+    echo "    mc-lan-ser: Abre el servidor gráfico que sirve para crear la sala."
+    echo ""
+    
+    echo "  Monojo Calculator"
+    echo "    monojo-calculator: Abre una simple calculadora gráfica."
+    echo ""
+    
+    echo "  LyndsHub"
+    echo "    lyndshub: Abre LyndsHub gráfico que contiene información sobre LyndsOS y cosas así divertidas."
+    echo ""
+    
+    echo "  Lynds Plymouth"
+    echo "    lynds-plymouth: Abre Lynds Plymouth gráfico que sirve para cambiar el plymouth (la pantalla de arranque) de manera rápida e intuitiva."
+    echo ""
+    
+    echo "  Abracitos"
+    echo "    sudo abracitos: Abre Abracitos gráfico, el instalador propio de Lynds para LyndsOS."
+    echo ""
+    
+    echo "  Casata"
+    echo "    casata: Es el gestor de aplicaciones de Lynds Corp. Escribe `casata --help` para aprender a usarlo."
+    echo ""
+    
+    echo "  Infernal"
+    echo "    infernal: Es el lenguaje de programación de Lynds Corp. y se encuentra en desarrollo. Se usa con `infernal <script.inf>`."
+    
+elif [[ "$1" == "--version" || "$1" == "-v" ]]; then
+    echo "Monojo Project Hub 1.0"
+    grep '^PRETTY_NAME=' /etc/os-release | cut -d= -f2 | tr -d '"'
+    
+else
+    echo ""
+    echo "Monojo Project Hub"
+    echo ""
+    echo "Opciones disponibles:"
+    echo "  -h|--help      Mostrar ayuda"
+    echo "  -v|--version   Mostrar versión"
+fi

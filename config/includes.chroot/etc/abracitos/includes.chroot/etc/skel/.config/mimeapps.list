@@ -1,0 +1,10 @@
+[Default Applications]
+audio/mpeg=vlc.desktop;
+image/svg+xml=org.kde.gwenview.desktop;
+text/html=zen.desktop;
+x-scheme-handler/http=zen.desktop;
+x-scheme-handler/https=zen.desktop;
+application/x-www-browser=zen.desktop;
+application/xhtml+xml=zen.desktop;
+application/pdf=org.kde.okular.desktop;
+video/mp4=vlc.desktop;

@@ -1,0 +1,10 @@
+{
+  "links": [
+    {
+      "file": "infernal",
+      "dest": "/usr/bin",
+      "name": "infernal",
+      "executable": true
+    }
+  ]
+}

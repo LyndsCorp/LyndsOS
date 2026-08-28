@@ -1,0 +1,4 @@
+[Desktop Entry]
+Type=Application
+Exec=/opt/usb-live/user-name.sh
+Terminal=false

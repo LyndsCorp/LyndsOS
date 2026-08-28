@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Monojo Chats LAN Cliente
+Type=Application
+Icon=monojo-azul
+Categories=Network;Chat;InstantMessaging;Office;Development;
+Comment=Conectarse a un chat en LAN.
+GenericName=Aplicación de mensajería instantanea
+Exec=mc-lan-cli
+StartupWMClass=monojo_chats_lan_main
+Terminal=false

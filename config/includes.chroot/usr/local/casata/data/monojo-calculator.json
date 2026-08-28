@@ -1,0 +1,9 @@
+{
+  "name": "monojo-calculator",
+  "version": "1.1",
+  "apt": ["python3", "python3-tk"],
+  "pip": [],
+  "size": "224,9 KiB",
+  "description": "Monojo Calculator, una simple calculadora.",
+  "usage": "Ejecuta monojo-calculator para abrir la ventana."
+}

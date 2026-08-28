@@ -1,0 +1,6 @@
+# LyndsOS - KScreenLocker config
+# Modo: normal
+# Por que: porque es el sistema instalado
+
+[Greeter][Wallpaper][org.kde.image][General]
+Image=/usr/share/wallpapers/LyndsOS/LyndsOS.png

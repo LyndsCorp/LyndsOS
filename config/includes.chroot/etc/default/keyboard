@@ -1,0 +1,8 @@
+# KEYBOARD CONFIGURATION FILE
+
+# Este es el teclado que recomiendo porque son las teclas de Windows (el sistema operativo) porque así estás acostumbrado
+
+XKBMODEL="pc105"
+XKBLAYOUT="es"
+XKBVARIANT="winkeys"
+BACKSPACE="guess"

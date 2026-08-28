@@ -1,0 +1,11 @@
+[Unit]
+Description=Configuracion inicial de LyndsOS
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/lynds-config
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

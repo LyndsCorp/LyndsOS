@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Monojo Drive LAN Cliente
+Type=Application
+Icon=monojo-verde
+Categories=Office;Development;Network;
+Comment=Conectarse a un servidor drive en LAN.
+GenericName=Drive LAN
+Exec=md-lan-cli
+StartupWMClass=monojo_drive_lan_main
+Terminal=false

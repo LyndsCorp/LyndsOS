@@ -1,0 +1,5 @@
+#!/bin/bash
+
+plasma-apply-wallpaperimage /usr/share/wallpapers/LyndsOS/LyndsOS.png
+
+rm -f ~/.config/autostart/lyndsos-wallpaper.desktop

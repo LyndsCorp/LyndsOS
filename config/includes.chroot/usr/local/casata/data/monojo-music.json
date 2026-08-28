@@ -1,0 +1,9 @@
+{
+  "name": "monojo-music",
+  "version": "2.0",
+  "apt": ["python3", "python3-pil", "python3-tk", "python3-dbus", "python3-gi", "gir1.2-glib-2.0", "dbus", "libglib2.0-bin", "ffmpeg", "zenity"],
+  "pip": [],
+  "size": "257,5 KiB",
+  "description": "Un reproductor de música offline con la posibilidad de crear playlists.",
+  "usage": "Puedes escuchar el audio de todos estos archivos: mp3, wav, flac, ogg, m4a, opus, mp4 y mkv."
+}

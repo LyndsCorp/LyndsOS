@@ -1,0 +1,25 @@
+#!/bin/sh
+set -e
+
+echo "Configurando LyndsOS..."
+
+locale-gen es_ES.UTF-8
+
+cat > /etc/locale.conf <<EOF
+LANG=es_ES.UTF-8
+EOF
+
+cat > /etc/default/locale <<EOF
+LANG=es_ES.UTF-8
+LANGUAGE=es_ES:es:en_US:en
+LC_ALL=es_ES.UTF-8
+EOF
+
+echo "Idioma configurado al español."
+
+ln -sf /usr/share/zoneinfo/Europe/Madrid /etc/localtime
+echo "Europe/Madrid" > /etc/timezone
+
+echo "Hora configurada a la de Madrid."
+
+exit 0

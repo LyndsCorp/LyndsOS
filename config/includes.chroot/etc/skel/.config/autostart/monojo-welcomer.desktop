@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Monojo Welcomer
+Comment=Bienvenida a LyndsOS
+Exec=sudo monojo-welcomer
+Icon=/usr/share/icons/Monojo/rojo.png
+Terminal=false
+Categories=System;Help;

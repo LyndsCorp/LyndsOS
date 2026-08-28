@@ -1,0 +1,11 @@
+# LyndsOS - KScreenLocker config
+# Modo: sin bloqueo automático
+# Por que: para que no se interrumpa la instalacion
+
+[Daemon]
+Autolock=false
+LockOnResume=false
+Timeout=0
+
+[Greeter][Wallpaper][org.kde.image][General]
+Image=/usr/share/wallpapers/LyndsOS/LyndsOS.png

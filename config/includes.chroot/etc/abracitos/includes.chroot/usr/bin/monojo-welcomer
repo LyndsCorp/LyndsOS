@@ -1,0 +1,215 @@
+#!/usr/bin/env python3
+
+import tkinter as tk
+from tkinter import messagebox
+import os
+import subprocess
+from PIL import Image, ImageTk
+
+# CONFIGURACION GENERAL
+RUTA_IMAGENES = "/usr/share/monojo-welcomer"
+TEMA_ACTUAL = "claro" # claro/oscuro
+
+TEMAS = {
+    "oscuro": {
+        "bg_main": "#1e1e24",
+        "bg_secundario": "#2a2a35",
+        "accent": "#00ff66",
+        "accent_hover": "#00cc52",
+        "text_main": "#ffffff",
+        "text_muted": "#a0a0aa",
+        "btn_fg": "#121216"
+    },
+    "claro": {
+        "bg_main": "#f5f5f7",
+        "bg_secundario": "#e5e5ea",
+        "accent": "#00cc55",
+        "accent_hover": "#0066cc",
+        "text_main": "#1d1d1f",
+        "text_muted": "#6e6e73",
+        "btn_fg": "#ffffff"
+    }
+}
+
+def get_color(clave):
+    return TEMAS[TEMA_ACTUAL][clave]
+
+# FUNCIONES MODULARES DE CONSTRUCCIÓN (Bloques)
+
+def crear_cabecera(parent, titulo, descripcion):
+    frame = tk.Frame(parent, bg=get_color("bg_main"))
+    frame.pack(fill=tk.X, anchor=tk.NW, pady=(0, 20))
+
+    tk.Label(frame, text=titulo, font=("Helvetica", 22, "bold"), fg=get_color("accent"), bg=get_color("bg_main")).pack(anchor=tk.W)
+    tk.Label(frame, text=descripcion, font=("Helvetica", 12), fg=get_color("text_muted"), bg=get_color("bg_main")).pack(anchor=tk.W, pady=(5, 0))
+    
+    # Linea divisoria
+    tk.Frame(frame, bg=get_color("bg_secundario"), height=2).pack(fill=tk.X, pady=(15, 0))
+
+def anadirImagen(parent, ruta_archivo, resolucion=(150, 150)):
+    ruta_completa = os.path.join(RUTA_IMAGENES, ruta_archivo)
+    
+    try:
+        img_original = Image.open(ruta_completa)
+        img_redimensionada = img_original.resize(resolucion, Image.Resampling.LANCZOS)
+        img_tk = ImageTk.PhotoImage(img_redimensionada)
+        
+        lbl = tk.Label(parent, image=img_tk, bg=get_color("bg_main"))
+        lbl.image = img_tk
+        lbl.pack(pady=10)
+    except FileNotFoundError:
+        tk.Label(parent, text=f"[ Imagen no encontrada: {ruta_archivo} ]", fg="red", bg=get_color("bg_main")).pack(pady=10)
+
+def anadirTexto(parent, texto):
+    lbl = tk.Label(parent, text=texto, font=("Helvetica", 11), fg=get_color("text_main"), bg=get_color("bg_main"), justify=tk.LEFT, wraplength=700)
+    lbl.pack(anchor=tk.W, pady=8)
+
+def anadirBloqueTexto(parent, titulo, texto):
+    box = tk.Frame(parent, bg=get_color("bg_secundario"), padx=20, pady=12)
+    box.pack(fill=tk.X, pady=6)
+    
+    tk.Label(box, text=titulo, font=("Helvetica", 12, "bold"), fg=get_color("accent"), bg=get_color("bg_secundario")).pack(anchor=tk.W)
+    tk.Label(box, text=texto, font=("Helvetica", 10), fg=get_color("text_main"), bg=get_color("bg_secundario"), justify=tk.LEFT, wraplength=660).pack(anchor=tk.W, pady=(4,0))
+
+# DEFINICIÓN DE LAS PÁGINAS
+def pagina_bienvenida(parent):
+    crear_cabecera(parent, "Bienvenido a LyndsOS", "Ya tienes tu sistema listo para el uso diario.")
+    anadirImagen(parent, "welcome.png", resolucion=(680, 180))
+    anadirTexto(parent, "LyndsOS está correctamente instalado en tu equipo. Disfruta de un entorno optimizado, seguro y basado en la estabilidad de Debian.")
+    anadirTexto(parent, "Este asistente te ayudará a conocer las herramientas básicas que hemos incluido para ti.")
+
+def pagina_caracteristicas(parent):
+    crear_cabecera(parent, "Características Principales", "Conoce la filosofía de tu nuevo entorno.")
+    anadirBloqueTexto(parent, "Base Debian", "Basado en el sistema operativo más estable y fiable de Linux.")
+    anadirBloqueTexto(parent, "Ligero y Optimizado", "Al ser Linux, consume 4 veces menos recursos que Windows.")
+    anadirBloqueTexto(parent, "Personalización Absoluta", "Puedes cambiar lo que quieras sin problemas.")
+
+def pagina_apps(parent):
+    crear_cabecera(parent, "Herramientas Propias", "Diseñadas para ser fáciles de utilizar.")
+    anadirImagen(parent, "3monojos.png", resolucion=(680, 180))
+    anadirBloqueTexto(parent, "Monojo Music", "Un reproductor de música offline muy optimizado.")
+    anadirBloqueTexto(parent, "Monojo Chats LAN", "Un servidor de chats en la misma red, sin servidores externos.")
+    anadirBloqueTexto(parent, "Monojo Drive LAN", "Servidor de archivos en la misma red, sin depender de un servidor externo.")
+
+def pagina_software(parent):
+    crear_cabecera(parent, "Software y Actualizaciones", "Mantén tu sistema seguro y estable")
+    anadirTexto(parent, "LyndsOS se apoya en los repositorios oficiales de Debian Trixie.")
+    anadirBloqueTexto(parent, "Actualizaciones del Sistema", "Ejecuta: sudo apt update && sudo apt upgrade.")
+    anadirBloqueTexto(parent, "Instalar Nuevos Programas", "Usa: sudo apt install <nombre_programa>.")
+    anadirImagen(parent, "debian13.png", resolucion=(680, 180))
+    
+def pagina_casata(parent):
+    crear_cabecera(parent, "Casata", "El instalador de aplicaciones.")
+    anadirBloqueTexto(parent, "Cómo usarlo", "Escribe casata --ayuda en la terminal y recibirás una guía detallada.")
+    anadirBloqueTexto(parent, "Cómo funciona", "Utiliza repositorios en GitHub como servidor y APT para instalar dependencias.")
+    anadirBloqueTexto(parent, "Apps de Lynds", "Puedes instalar aplicaciones del ecosistema de Lynds sin problemas.")
+
+def pagina_atajos(parent):
+    crear_cabecera(parent, "Atajos de Teclado Útiles", "Domina la navegación de tu escritorio.")
+    anadirBloqueTexto(parent, "Lanzar el Menú", "Presiona la tecla [ Super ] para buscar aplicaciones.")
+    anadirBloqueTexto(parent, "Consola / Terminal", "Abre una terminal con: [ Ctrl + Alt + T ].")
+    anadirBloqueTexto(parent, "Explorador de Archivos", "Accede a tus archivos con: [ Super + E ].")
+
+def pagina_final(parent):
+    crear_cabecera(parent, "¡Todo Listo!", "Disfruta de la experiencia completa.")
+    anadirImagen(parent, "welcome.png", resolucion=(680, 180))
+    anadirTexto(parent, "Gracias por elegir LyndsOS. Ya puedes cerrar este asistente y comenzar a trabajar.")
+
+# MOTOR DE NAVEGACION Y VENTANA PRINCIPAL
+
+class MonojoWelcomeApp(tk.Tk):
+    def __init__(self, paginas):
+        super().__init__(className="monojo_welcomer_main")
+        
+        ruta_icono = os.path.join("/usr/share/icons/hicolor/512x512/apps/monojo.png") # Asegúrate que el nombre coincida
+        if os.path.exists(ruta_icono):
+            img_icono = tk.PhotoImage(file=ruta_icono)
+            self.iconphoto(False, img_icono)
+        
+        self.title("Monojo Welcomer - LyndsOS")
+        self.geometry("850x650")
+        self.resizable(False, False)
+        self.configure(bg=get_color("bg_main"))
+
+        self.paginas = paginas
+        self.indice_actual = 0
+
+        self.construir_esqueleto()
+        self.mostrar_pagina()
+
+    def construir_esqueleto(self):
+        # --- CONTENIDO CENTRAL ---
+        self.main_container = tk.Frame(self, bg=get_color("bg_main"))
+        self.main_container.pack(side=tk.TOP, fill=tk.BOTH, expand=True, padx=40, pady=(30, 20))
+
+        # --- BARRA INFERIOR (Navegacion) ---
+        self.bottom_bar = tk.Frame(self, height=70, bg=get_color("bg_main"))
+        self.bottom_bar.pack(side=tk.BOTTOM, fill=tk.X)
+        self.bottom_bar.pack_propagate(False)
+
+        self.btn_atras = tk.Button(
+            self.bottom_bar, text="◀ Anterior", font=("Helvetica", 11, "bold"), 
+            bd=0, padx=20, pady=10, cursor="hand2", 
+            bg=get_color("bg_secundario"), fg=get_color("text_main"), activebackground=get_color("bg_main"),
+            command=self.pagina_anterior
+        )
+
+        self.btn_siguiente = tk.Button(
+            self.bottom_bar, text="Siguiente ▶", font=("Helvetica", 11, "bold"), 
+            bd=0, padx=20, pady=10, cursor="hand2", 
+            bg=get_color("accent"), fg=get_color("btn_fg"), activebackground=get_color("accent_hover"),
+            command=self.pagina_siguiente
+        )
+        self.btn_siguiente.pack(side=tk.RIGHT, padx=40, pady=10)
+
+    def mostrar_pagina(self):
+        for widget in self.main_container.winfo_children():
+            widget.destroy()
+
+        funcion_pagina = self.paginas[self.indice_actual]
+        funcion_pagina(self.main_container)
+
+        if self.indice_actual == 0:
+            self.btn_atras.pack_forget()
+        else:
+            self.btn_atras.pack(side=tk.LEFT, padx=40, pady=10)
+
+        if self.indice_actual == len(self.paginas) - 1:
+            self.btn_siguiente.configure(text="✔ Finalizar")
+        else:
+            self.btn_siguiente.configure(text="Siguiente ▶")
+
+    def pagina_siguiente(self):
+        if self.indice_actual < len(self.paginas) - 1:
+            self.indice_actual += 1
+            self.mostrar_pagina()
+        else:
+            self.destroy()
+
+    def pagina_anterior(self):
+        if self.indice_actual > 0:
+            self.indice_actual -= 1
+            self.mostrar_pagina()
+
+# LISTA DE PAGINAS A CARGAR (Orden de ejecucion)
+LISTA_PAGINAS = [
+    pagina_bienvenida,
+    pagina_caracteristicas,
+    pagina_apps,
+    pagina_software,
+    pagina_casata,
+    pagina_atajos,
+    pagina_final
+]
+
+if __name__ == "__main__":
+    ruta = os.path.expanduser("~/.config/autostart/monojo-welcomer.desktop")
+    
+    if os.path.exists(ruta):
+        try:
+            os.remove(ruta)
+        except OSError:
+            pass
+    
+    app = MonojoWelcomeApp(LISTA_PAGINAS)
+    app.mainloop()

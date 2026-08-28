@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Monojo Calculator
+Comment=Calculadora simple y rápida
+Exec=monojo-calculator
+Icon=monojo-naranja
+Terminal=false
+Categories=Utility;Calculator;
+StartupNotify=true
+StartupWMClass=monojo_calculator_main

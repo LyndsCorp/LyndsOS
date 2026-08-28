@@ -1,0 +1,8 @@
+{
+  "name": "LYNDS-Project",
+  "metarepo": "https://raw.githubusercontent.com/LyndsCorp/Casata-LYNDS-Project/main/METAREPO",
+  "lyndshub": "https://raw.githubusercontent.com/LyndsCorp/Casata-LYNDS-Project/main/LyndsHub.json",
+  "lynds-wallpapers-installer": "https://raw.githubusercontent.com/LyndsCorp/Casata-LYNDS-Project/main/Lynds-Wallpapers-Installer.json",
+  "lynds-wallpapers-installer-go": "https://raw.githubusercontent.com/LyndsCorp/Casata-LYNDS-Project/main/Lynds-Wallpapers-Installer-GO.json",
+  "lyndsfetch": "https://raw.githubusercontent.com/LyndsCorp/Casata-LYNDS-Project/main/LyndsFetch.json"
+}

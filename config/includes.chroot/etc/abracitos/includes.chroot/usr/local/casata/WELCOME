@@ -1,0 +1,12 @@
+
+¡Bienvenido al gestor de aplicaciones de Lynds Corp.!
+
+Está diseñado para poder instalar las aplicaciones de LYNDS Project sin que estén en APT.
+Utiliza APT, el gestor de paquetes de Debian, para instalar las dependencias si no están instaladas.
+
+Escribe "casata --help" o "casata --ayuda" para recibir ayuda sobre cómo usarlo.
+
+¡Espero que te guste!
+
+Copyright (C) Aros Legendarios, David Baña Szymaniak
+

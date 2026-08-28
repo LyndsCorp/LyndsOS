@@ -1,0 +1,20 @@
+{
+  "links": [
+    {
+      "file": "monojo_music.py",
+      "dest": "/usr/bin",
+      "name": "monojo-music",
+      "executable": true
+    },
+    {
+      "file": "monojo-amarillo.png",
+      "dest": "/usr/share/icons/hicolor/512x512/apps",
+      "name": "monojo-amarillo.png"
+    },
+    {
+      "file": "monojo_music.desktop",
+      "dest": "/usr/share/applications",
+      "name": "monojo_music.desktop"
+    }
+  ]
+}

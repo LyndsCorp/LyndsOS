@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=(Terminal) Instalar Sistema Operativo Terminal
+Comment=Abracitos, el instalador de LyndsOS (terminal para debug)
+Exec=sudo abracitos
+Icon=lyndsos
+Terminal=true
+Categories=System;
+StartupNotify=true
+StartupWMClass=abracitos_main
