@@ -16,6 +16,8 @@ all:
 
 get-zen:
 	@infernal ./get-zen.inf
+clean-zen:
+	@rm -r ./config/includes.chroot/usr/local/casata/apps/zen-browser-amd64
 
 clean:
 	@if [ "$$(id -u)" -ne 0 ]; then \
