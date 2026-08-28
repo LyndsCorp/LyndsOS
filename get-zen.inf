@@ -1,0 +1,5 @@
+#!/usr/bin/infernal
+
+path = "./config/includes.chroot/usr/local/casata/apps/"
+
+casata download zen-browser-amd64 --extract --path $path

@@ -14,6 +14,9 @@ all:
 		--iso-volume "LyndsOS 1.26.08 Light"
 	@lb build
 
+get-zen:
+	@infernal ./get-zen.inf
+
 clean:
 	@if [ "$$(id -u)" -ne 0 ]; then \
 		echo "Tienes que ejecutar 'make clean' con sudo"; \
@@ -27,3 +30,4 @@ distclean:
 		exit 2; \
 	fi
 	@lb clean --purge
+	@rm -r ./config/includes.chroot/usr/local/casata/apps/zen-browser-amd64/
