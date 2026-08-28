@@ -1,5 +1,5 @@
 all:
-	@if [ "$$UID" != "0" ]; then \
+	@if [ "$$(id -u)" -ne 0 ]; then \
 		echo "Tienes que ejecutar 'make' con sudo"; \
 		exit 2; \
 	fi
@@ -15,7 +15,7 @@ all:
 	@lb build
 
 clean:
-	@if [ "$$UID" != "0" ]; then \
+	@if [ "$$(id -u)" -ne 0 ]; then \
 		echo "Tienes que ejecutar 'make clean' con sudo"; \
 		exit 2; \
 	fi
