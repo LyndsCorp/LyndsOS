@@ -20,3 +20,10 @@ clean:
 		exit 2; \
 	fi
 	@lb clean
+
+distclean:
+	@if [ "$$(id -u)" -ne 0 ]; then \
+		echo "Tienes que ejecutar 'make clean' con sudo"; \
+		exit 2; \
+	fi
+	@lb clean --purge
