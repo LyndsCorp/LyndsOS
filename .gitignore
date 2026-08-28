@@ -1,0 +1,14 @@
+/cache/
+
+/config/apt/
+/config/archives/
+/config/binary/
+/config/bootloaders/
+/config/bootstrap/
+/config/chroot/
+/config/debian-installer/
+/config/packages/
+/config/packages.binary/
+/config/packages.chroot/
+/config/rootfs/
+/config/source
