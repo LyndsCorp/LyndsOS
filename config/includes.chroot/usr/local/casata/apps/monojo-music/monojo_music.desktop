@@ -8,3 +8,5 @@ Terminal=false
 Categories=AudioVideo;Player;
 StartupNotify=true
 StartupWMClass=monojo_music_main
+Keywords=Player;Audio;
+MimeType=audio/mpeg;audio/wav;audio/flac;audio/ogg;audio/mp4;audio/opus;video/mp4;video/x-matroska;

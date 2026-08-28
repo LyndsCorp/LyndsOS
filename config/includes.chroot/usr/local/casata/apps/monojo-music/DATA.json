@@ -1,0 +1,21 @@
+{
+  "name": "monojo-music",
+  "version": "2.3",
+  "apt": ["python3", "python3-pil", "python3-tk", "ffmpeg", "python3-dbus", "python3-gi", "gir1.2-glib-2.0", "zenity"],
+  "pacman": ["python", "python-pillow", "tk", "ffmpeg", "python-dbus", "python-gobject", "zenity"],
+  "dnf": ["python3", "python3-pillow", "python3-tkinter", "ffmpeg", "python3-dbus", "python3-gobject", "zenity"],
+  "casata": [],
+  "pip": [],
+  "size": "349.4 KiB",
+  "description": "Reproductor de música con interfaz gráfica Tkinter, soporte MPRIS2, playlists y tema automático claro/oscuro según el sistema.",
+  "usage": "Ejecuta monojo-music para abrir el reproductor. Usa los atajos de teclado o los botones para gestionar tu biblioteca y playlists.",
+  
+  "project": "Monojo Project",
+  "is_open_source": true,
+  "source_code": "https://github.com/LyndsCorp/Monojo-Music",
+  "license": "GPL-3.0-or-later",
+  "origin": "Lynds Corp",
+  "developer": "David Baña Szymaniak",
+  "copyright_title": "David Baña Szymaniak",
+  "copyright_year": 2026
+}

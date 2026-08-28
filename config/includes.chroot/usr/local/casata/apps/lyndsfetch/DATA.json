@@ -1,0 +1,21 @@
+{
+  "name": "lyndsfetch",
+  "version": "https://raw.githubusercontent.com/LyndsCorp/LyndsFetch/refs/heads/main/VERSION",
+  "apt": ["jq"],
+  "pacman": ["jq"],
+  "dnf": ["jq"],
+  "casata": [],
+  "pip": [],
+  "size": "41.9 KiB",
+  "description": "LyndsFetch, decoración de terminal propia de LyndsOS/LyndsGO. Tiene información del sistema.",
+  "usage": "Ejecuta echo 'lyndsfetch' >> ~/.bashrc para añadirlo que se vea cada vez que abres la terminal.",
+
+  "project": "LYNDS Project",
+  "is_open_source": true,
+  "source_code": "https://github.com/LyndsCorp/LyndsFetch",
+  "license": "GPL-3.0-or-later",
+  "origin": "Lynds Corp.",
+  "developer": "David Baña Szymaniak",
+  "copyright_title": "David Baña Szymaniak",
+  "copyright_year": 2026
+}

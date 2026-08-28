@@ -1,0 +1,21 @@
+{
+  "name": "mc-lan",
+  "version": "https://raw.githubusercontent.com/LyndsCorp/Monojo-Chats-LAN/refs/heads/main/VERSION",
+  "apt": ["python3", "python3-pil", "python3-tk", "python3-cryptography"],
+  "pacman": ["python", "python-pillow", "tk", "python-cryptography"],
+  "dnf": ["python3", "python3-pillow", "python3-tkinter", "python3-cryptography"],
+  "casata": [],
+  "pip": [],
+  "size": "349.4 KiB",
+  "description": "Chats en LAN sin depender de servidores externos, solo de estar en la misma red. mc-lan significa Monojo Chats LAN.",
+  "usage": "Ejecuta mc-lan-cli para conectarte a un servidor y mc-lan-ser para crear el servidor.",
+
+  "project": "Monojo Project",
+  "is_open_source": true,
+  "source_code": "https://github.com/LyndsCorp/Monojo-Chats-LAN",
+  "license": "GPL-3.0-or-later",
+  "origin": "Lynds Corp.",
+  "developer": "David Baña Szymaniak",
+  "copyright_title": "David Baña Szymaniak",
+  "copyright_year": 2026
+}

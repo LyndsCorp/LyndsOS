@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Desarrollado por David Baña Szymaniak. Licencia GPL v3, LYNDS Project
+# Version 1.2.6
 
 # Ruta del archivo de configuración
 CONFIG_FILE="$HOME/.config/LyndsFetch/config.json"
@@ -17,6 +18,7 @@ case "$1" in
         echo "  --help-modules, --ayuda-modulos    Muestra los módulos disponibles"
         echo "  --edit, --editar, -e               Abre la configuración con nano"
         echo "  --see, --ver                       Muestra el contenido de la configuración"
+        echo "  -v, --version                      Muestra la versión de LyndsFetch"
         exit 0
         ;;
     --help-color|--ayuda-color)
@@ -37,11 +39,11 @@ case "$1" in
         echo "Módulos disponibles (se pueden incluir en la configuración):"
         echo "  user, host, hora, date, separator, colours, colors,"
         echo "  os, arch, kernel, uptime, shell, terminal, pkgs,"
-        echo "  de, wm, display_manager, theme, locale, resolution,"
-        echo "  cpu, gpu, ram, swap, disk, battery, local_ip, apt_updates,"
-        echo "  cpu_temperature, gpu_temperature, session_type,"
-        echo "  os_codename, os_version, os_based, ram-type, ram_type,"
-        echo "  casata-version, casata-int-apps, casata-apps"
+        echo "  display-manager, theme, locale, resolution,"
+        echo "  cpu, gpu, ram, swap, disk, battery, local-ip, apt-updates,"
+        echo "  cpu-temperature, gpu-temperature, session,"
+        echo "  os-codename, os-version, os-based, ram-type,"
+        echo "  casata-version, casata-int-apps, casata-apps, global-ip"
         exit 0
         ;;
     --edit|--editar|-e)
@@ -50,6 +52,10 @@ case "$1" in
         ;;
     --see|--ver)
         cat "$CONFIG_FILE"
+        exit 0
+        ;;
+    -v|--version)
+        cat /usr/local/casata/apps/lyndsfetch/VERSION
         exit 0
         ;;
 esac
@@ -65,7 +71,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
         OS_NAME="unknown"
     fi
 
-    DEFAULT_LOGO="lyndsos"
+    DEFAULT_LOGO="default"
     DEFAULT_COLOR="green"
 
     if [[ "$OS_ID" == *"lyndsos"* || "$OS_NAME" == *"lyndsos"* ]]; then
@@ -91,8 +97,11 @@ if [ ! -f "$CONFIG_FILE" ]; then
             DEFAULT_LOGO="ubuntu"
             DEFAULT_COLOR="yellow"
         fi
-    elif [[ "$OS_ID" == *"arch"* || "$OS_NAME" == *"arch"* ]]; then
-        DEFAULT_LOGO="arch"
+    elif [[ "$OS_ID" == *"arch"* && "$OS_NAME" == *"arch"* ]]; then
+        DEFAULT_LOGO="arch-logo"
+        DEFAULT_COLOR="blue"
+    elif [[ "$OS_ID" == *"arch"* && "$OS_NAME" == "Nyarch"* ]]; then
+        DEFAULT_LOGO="i-use-nyarch-btw"
         DEFAULT_COLOR="blue"
     fi
 
@@ -110,21 +119,20 @@ if [ ! -f "$CONFIG_FILE" ]; then
         "kernel",
         "uptime",
         "separator",
-        "de",
-        "wm",
-        "display_manager",
+        "session-type",
+        "display-manager",
         "separator",
-        "cpu",
+        "disk",
         "ram"
     ],
-    "available_modules": [
+    "Modulos existentes para usar (puedes borrar esta parte)": [
         "user", "host", "hora", "date", "separator", "colours", "colors",
         "os", "arch", "kernel", "uptime", "shell", "terminal", "pkgs",
-        "de", "wm", "display_manager", "theme", "locale", "resolution",
-        "cpu", "gpu", "ram", "swap", "disk", "battery", "local_ip", "apt_updates",
-        "cpu_temperature", "gpu_temperature", "session_type",
-        "os_codename", "os_version", "os_based", "ram-type", "ram_type",
-        "casata-version", "casata-int-apps", "casata-apps"
+        "display-manager", "theme", "locale", "resolution",
+        "cpu", "gpu", "ram", "swap", "disk", "battery", "local-ip", "apt-updates",
+        "cpu-temperature", "gpu-temperature", "session-type", "session",
+        "os-codename", "os-version", "os-based", "ram-type",
+        "casata-version", "casata-int-apps", "casata-apps", "global-ip"
     ]
 }
 EOF
@@ -165,9 +173,9 @@ case "$COLOR_SELECTION" in
 esac
 NC='\x1b[0m'
 BOLD='\x1b[1m'
-
-# --- DECLARACIÓN DE LOGOS (se mantienen todos los logos anteriores, omitidos por brevedad) ---
-declare -a logo
+GREEN='\x1b[32m'
+YELLOW='\x1b[33m'
+RED='\x1b[31m'
 
 if [ "$LOGO_SELECTION" == "lyndsos-logo" ]; then
     mapfile -t logo << "EOF"
@@ -442,23 +450,23 @@ elif [ "$LOGO_SELECTION" == "linux-big-logo" ]; then
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⣿⣿⣿⣿⣿⠂⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠇⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣿⣿⣿⣿⣿⣿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡀⠀⠀⠀⠀
-⠀⠀⠀⢀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀
+⠀⠀⠀ ⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⠀⠀⠀⠀
 ⠀⠀⠀⡰⠉⠈⠑⠠⢀⢸⣿⣿⣿⣿⣿⣿⣿⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡄⠀⠀⠀
 ⠀⠀⠀⡇⠀⠀⠀⠀⠀⠉⠙⠛⠛⠛⠿⠿⣿⣿⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠟⠉⠀⠀⠀⠘⢿⣿⣿⡇⠀⠀⠀
 ⠀⠀⠀⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢻⣿⣿⣿⣿⣿⣿⣿⣿⠟⠉⠀⠀⠀⠀⠀⠀⠀⠘⣿⣿⡇⠀⠀⠀
 ⠀⠀⢰⠃⠀⠀⢠⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⠘⣿⣿⣿⣿⣿⡟⠁⠂⠀⠀⠀⠀⠀⠀⠀⠀⠀⢻⣿⡇⠀⠀⠀
-⠀⡠⠊⠀⢀⠐⡀⠈⠄⠂⡐⠀⢂⠐⠈⠠⢀⠀⠀⢻⡤⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣷⠀⢀⠛⡛⢫⠑⡄⢃⡐⢈⠐⡀⠄⠐⠀⠀⠀⠀⠈⢿⡇⠂⠀⠀
+⠀⡠⠊⠀⢀⠐⡀⠈⠄⠂⡐⠀⢂⠐⠈⠠⢀⠀⠀⢻⡤⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣷⠀⢀⠛⡛⢫⠑⡄⢃⡐⢈⠐⡀⠄⠐⠀⠀⠀⠀⠈⢿⡇⠀⠀
 ⢠⢁⠀⠄⢂⡐⠠⡁⠌⡐⠠⢁⠂⠌⢠⢁⠂⡐⠀⠘⣿⣳⢤⡀⡀⢀⠀⡀⢀⠀⡀⠠⡀⠤⣁⢿⠀⠄⣂⠑⡂⠥⡘⢠⠐⢂⠰⠀⠌⡐⢈⠐⡀⠀⠀⠀⠑⢄⠀⠀
 ⠈⢧⡘⡐⢂⠤⠑⡠⢁⠆⡁⠆⠌⣂⠁⡂⠌⡐⠀⠀⢹⣿⣷⣧⣝⣢⠱⡰⣈⢆⢡⢃⠴⡱⣌⣾⠈⡐⢠⠘⡠⢁⠆⡡⢘⠠⡁⠎⡐⡈⢄⠢⢀⠡⢀⠈⠂⠀⠑⡀
 ⠀⠀⠙⢵⣊⠴⡁⢆⠡⢂⠅⡊⠔⡠⠘⢄⠒⡀⢁⠀⠀⢻⣿⣿⣿⣿⣿⣷⣷⣾⣶⣿⣾⣿⣿⣿⠀⠐⡄⠢⢁⠆⡘⢄⠡⢂⠱⢠⠑⡨⢄⠢⣁⠒⡄⢊⠄⣂⢀⡡
 ⠀⠀⠀⠀⠉⠲⣍⢢⠱⡈⢆⠱⡈⠔⡉⢄⠒⠄⢂⠀⢀⠀⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡟⠀⠂⢄⠣⠌⣂⠱⡈⢆⠡⢊⠄⢣⠐⢢⠑⡄⢣⡘⢆⡳⣬⠞⠁
-⠀⠀⠀⢀⠀⠀⠈⢣⡞⡰⢈⠆⡱⢈⠔⡨⢘⡈⠆⢌⠀⡐⠨⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠠⢉⠄⢢⠑⡄⢣⠘⡄⠣⢌⢊⡔⡉⢦⠩⡜⣡⢞⡷⠋⠁⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠙⢶⡉⢆⡱⢈⠆⡑⠢⢌⡘⢄⠣⡐⣡⠏⠉⠉⠉⠉⠉⠉⠉⠉⠍⠉⠉⢳⢁⠊⡜⢠⠃⡜⢠⠃⣌⠱⣈⠦⢰⡉⢆⡳⣼⠟⠁⠀⠀⡆⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠄⠀⠀⠹⣖⡰⢃⡜⢄⠳⣠⠚⣌⠖⣥⡿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⣎⠴⡈⢆⠱⡈⢆⠱⡠⢃⠖⣌⠣⣜⢣⠟⠁⠀⠀⠀⠀⠃⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠓⢯⡼⣬⣓⣦⣟⣼⡿⠚⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⣶⣉⢆⠳⡌⡜⢢⠱⡩⢜⣤⢻⡼⠋⠀⠀⢸⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠐⠀⠀⠀⠉⠙⠛⠛⠋⠉⠀⡀⠀⠀⠐⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠛⢾⣳⣼⣜⣧⣳⡽⣞⠞⠋⠀⠀⠀⠀⠒⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⠈⠉⣉⢉⣉⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀ ⠀⠀⠈⢣⡞⡰⢈⠆⡱⢈⠔⡨⢘⡈⠆⢌⠀⡐⠨⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠠⢉⠄⢢⠑⡄⢣⠘⡄⠣⢌⢊⡔⡉⢦⠩⡜⣡⢞⡷⠋⠁⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠙⢶⡉⢆⡱⢈⠆⡑⠢⢌⡘⢄⠣⡐⣡⠏⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⢳⢁⠊⡜⢠⠃⡜⢠⠃⣌⠱⣈⠦⢰⡉⢆⡳⣼⠟⠁⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀ ⠀⠀⠹⣖⡰⢃⡜⢄⠳⣠⠚⣌⠖⣥⡿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⣎⠴⡈⢆⠱⡈⢆⠱⡠⢃⠖⣌⠣⣜⢣⠟⠁⠀⠀⠀⠀ ⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠓⢯⡼⣬⣓⣦⣟⣼⡿⠚⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⣶⣉⢆⠳⡌⡜⢢⠱⡩⢜⣤⢻⡼⠋⠀⠀ ⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀ ⠀⠀⠀⠉⠙⠛⠛⠋⠉⠀ ⠀⠀ ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠛⢾⣳⣼⣜⣧⣳⡽⣞⠞⠋⠀⠀⠀⠀ ⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀ ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀ ⠀⠀⠀⠀⠈⠉⣉⢉⣉⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 EOF
 
 elif [ "$LOGO_SELECTION" == "ubuntu" ]; then
@@ -555,7 +563,7 @@ EOF
 
 elif [ "$LOGO_SELECTION" == "nyarch" ]; then
     mapfile -t logo << "EOF"
-  _   _                       _
+  _   _                      _
  | \ | |                    | |
  |  \| |_   _  __ _ _ __ ___| |__
  | . ` | | | |/ _` | '__/ __| '_ \
@@ -624,6 +632,23 @@ elif [ "$LOGO_SELECTION" == "kali-logo" ]; then
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠃⠀
 EOF
 
+elif [ "$LOGO_SELECTION" == "default" ]; then
+    mapfile -t logo << "EOF"
+  _                     _
+ | |                   | |
+ | |    _   _ _ __   __| |___
+ | |   | | | | '_ \ / _` / __|
+ | |___| |_| | | | | (_| \__ \
+ |______\__, |_| |_|\__,_|___/
+         __/ |
+  ______|___/      _
+ |  ____| | |     | |
+ | |__ ___| |_ ___| |__
+ |  __/ _ \ __/ __| '_ \
+ | | |  __/ || (__| | | |
+ |_|  \___|\__\___|_| |_|
+EOF
+
 else
     mapfile -t logo << "EOF"
   _                     _
@@ -633,7 +658,7 @@ else
  | |___| |_| | | | | (_| \__ \
  |______\__, |_| |_|\__,_|___/
          __/ |
-        |___/      _
+  ______|___/      _
  |  ____| | |     | |
  | |__ ___| |_ ___| |__
  |  __/ _ \ __/ __| '_ \
@@ -703,41 +728,31 @@ get_info() {
                 info_val="Desconocido"
             fi
             ;;
-        de)
-            info_label="DE"
-            info_val="${XDG_CURRENT_DESKTOP:-$DESKTOP_SESSION}"
-            [ -z "$info_val" ] && info_val="No detectado"
-            ;;
-        wm)
-            info_label="WM"
-            # Detectar el servidor gráfico (X11 o Wayland)
-            session="${XDG_SESSION_TYPE}"
-            if [ -z "$session" ]; then
-                if [ -n "$WAYLAND_DISPLAY" ]; then
-                    session="wayland"
-                elif [ -n "$DISPLAY" ]; then
-                    session="x11"
-                else
-                    session="desconocido"
-                fi
-            fi
-            # Normalizar a "X11" o "Wayland"
-            case "$session" in
-                x11|X11) info_val="X11" ;;
-                wayland|Wayland) info_val="Wayland" ;;
-                *) info_val="Desconocido" ;;
-            esac
-            ;;
-        display_manager)
+        display-manager)
             info_label="Login (DM)"
             dm=$(basename "$(cat /etc/X11/default-display-manager 2>/dev/null)" 2>/dev/null)
             [ -z "$dm" ] && dm=$(pgrep -l -x 'sddm|gdm|gdm3|lightdm|lxdm|xdm' | awk '{print $2}' | head -n 1)
             [ -z "$dm" ] && dm="No detectado"
+            # Capitalizar correctamente los DMs conocidos
+            case "$dm" in
+                sddm)    dm="SDDM" ;;
+                gdm|gdm3) dm="GDM" ;;
+                lightdm) dm="LightDM" ;;
+                lxdm)    dm="LXDM" ;;
+                xdm)     dm="XDM" ;;
+            esac
             info_val="$dm"
             ;;
         theme)
-            info_label="Tema"
-            if [ -f ~/.config/kdeglobals ]; then
+#             info_label="Tema"
+            info_val=""
+            # Intentar obtener tema según el entorno
+            if [[ "${XDG_CURRENT_DESKTOP,,}" =~ (gnome|ubuntu.*gnome) ]]; then
+                if command -v gsettings &>/dev/null; then
+                    info_val=$(gsettings get org.gnome.desktop.interface gtk-theme 2>/dev/null | tr -d "'")
+                fi
+                [ -z "$info_val" ] && info_val=$(grep 'gtk-theme-name=' ~/.config/gtk-3.0/settings.ini 2>/dev/null | cut -d'=' -f2)
+            elif [ -f ~/.config/kdeglobals ]; then
                 info_val=$(grep '^ColorScheme=' ~/.config/kdeglobals | head -n 1 | cut -d'=' -f2)
             fi
             [ -z "$info_val" ] && info_val="Default"
@@ -768,13 +783,27 @@ get_info() {
         swap)
             info_label="Swap"
             info_val=$(free -h | awk '/Swap:/ {print $3 " / " $2}')
-            if [[ "$info_val" == *"0B / 0B"* || "$info_val" == *"0.0 B"* ]]; then
-                return 0
+            if [[ "$info_val" == *"0B / 0B"* || "$info_val" == *"0.0 B"* || -z "$info_val" ]]; then
+                info_val="No configurada"
             fi
             ;;
         disk)
             info_label="Disco (/)"
-            info_val=$(df -h / | awk 'NR==2 {print $3 " / " $2 " (" $5 ")"}')
+            used=$(df -h / | awk 'NR==2 {print $3}')
+            size=$(df -h / | awk 'NR==2 {print $2}')
+            percent=$(df -h / | awk 'NR==2 {print $5}' | tr -d '%')
+            if [ -n "$percent" ]; then
+                if [ "$percent" -lt 70 ]; then
+                    color_percent="$GREEN"
+                elif [ "$percent" -lt 90 ]; then
+                    color_percent="$YELLOW"
+                else
+                    color_percent="$RED"
+                fi
+                info_val="${used} / ${size} (${color_percent}${percent}%${NC})"
+            else
+                info_val="${used} / ${size} (desconocido)"
+            fi
             ;;
         battery)
             bat_path=$(ls -d /sys/class/power_supply/BAT* 2>/dev/null | head -n 1)
@@ -787,12 +816,21 @@ get_info() {
                 return 0
             fi
             ;;
-        local_ip)
+        local-ip)
             info_label="IP Local"
             info_val=$(hostname -I | awk '{print $1}')
             [ -z "$info_val" ] && info_val="Sin conexión"
             ;;
-        apt_updates)
+        global-ip)
+            info_label="IP Pública"
+            if command -v curl &>/dev/null; then
+                info_val=$(curl -s --max-time 5 ifconfig.me 2>/dev/null || echo "No disponible")
+            else
+                info_val="curl no instalado"
+            fi
+            [ -z "$info_val" ] && info_val="No disponible"
+            ;;
+        apt-updates)
             info_label="Actualiz. APT"
             if command -v apt &>/dev/null; then
                 count=$(apt list --upgradable 2>/dev/null | grep -c "/" || echo 0)
@@ -801,7 +839,7 @@ get_info() {
                 info_val="N/A"
             fi
             ;;
-        cpu-temperature|cpu_temperature)
+        cpu-temperature)
             info_label="Temp. CPU"
             cpu_temp="N/A"
             for zone in /sys/class/thermal/thermal_zone*; do
@@ -816,15 +854,14 @@ get_info() {
                     fi
                 fi
             done
-            info_val="${cpu_temp}"
+            [ "$cpu_temp" = "N/A" ] && info_val="No disponible" || info_val="$cpu_temp"
             ;;
-        gpu-temperature|gpu_temperature)
+        gpu-temperature)
             info_label="Temp. GPU"
             gpu_temp="N/A"
             if command -v nvidia-smi &>/dev/null; then
-                gpu_temp=$(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>/dev/null)
-                [ -z "$gpu_temp" ] && gpu_temp="N/A"
-                info_val="${gpu_temp}°C"
+                temp=$(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>/dev/null)
+                [ -n "$temp" ] && gpu_temp="${temp}°C"
             else
                 for zone in /sys/class/thermal/thermal_zone*; do
                     if [ -f "$zone/type" ]; then
@@ -832,42 +869,51 @@ get_info() {
                         if [[ "$type" =~ (gpu|GPU|radeon|amdgpu|nvidia) ]]; then
                             temp_raw=$(cat "$zone/temp" 2>/dev/null)
                             if [ -n "$temp_raw" ]; then
-                                gpu_temp=$(( temp_raw / 1000 ))
+                                gpu_temp=$(( temp_raw / 1000 ))°C
                                 break
                             fi
                         fi
                     fi
                 done
-                info_val="${gpu_temp}°C"
             fi
+            [ "$gpu_temp" = "N/A" ] && info_val="No disponible" || info_val="$gpu_temp"
             ;;
-        session_type|wm_type)
-            info_label="Sesión"
+        session-type|session)
+            info_label="Servidor Gráfico"
             session="${XDG_SESSION_TYPE}"
             if [ -z "$session" ]; then
                 if [ -n "$WAYLAND_DISPLAY" ]; then
-                    session="wayland"
+                    session="Wayland"
                 elif [ -n "$DISPLAY" ]; then
-                    session="x11"
+                    session="X11"
                 else
                     session="No detectada"
                 fi
+            else
+                # Normalizar a mayúsculas correctas
+                session=$(echo "$session" | tr '[:upper:]' '[:lower:]')
+                case "$session" in
+                    wayland) session="Wayland" ;;
+                    x11|xorg) session="X11" ;;
+                esac
             fi
-            case "$session" in
-                x11|X11) info_val="X11" ;;
-                wayland|Wayland) info_val="Wayland" ;;
-                *) info_val="$session" ;;
-            esac
+            info_val="$session"
             ;;
-        os-codename|os_codename)
-            info_label="Código SO"
+        os-codename)
+            info_label="Codename del SO"
             if [ -f /etc/os-release ]; then
-                codename=$(grep -E '^(VERSION_CODENAME|UBUNTU_CODENAME)=' /etc/os-release | head -n 1 | cut -d= -f2 | tr -d '"')
-            fi
-            [ -z "$codename" ] && codename="N/A"
-            info_val="$codename"
-            ;;
-        os-version|os_version)
+            codename=$(grep -E '^(VERSION_CODENAME|UBUNTU_CODENAME)=' /etc/os-release \
+                   | head -n 1 | cut -d= -f2 | tr -d '"')
+        fi
+
+        [ -z "$codename" ] && codename="N/A"
+
+        # Primera letra en mayúscula
+        codename="$(echo "$codename" | sed 's/.*/\u&/')"
+
+        info_val="$codename"
+        ;;
+        os-version)
             info_label="Versión SO"
             if [ -f /etc/os-release ]; then
                 version=$(grep -E '^VERSION_ID=' /etc/os-release | cut -d= -f2 | tr -d '"')
@@ -875,7 +921,7 @@ get_info() {
             [ -z "$version" ] && version="N/A"
             info_val="$version"
             ;;
-        os-based|os_based)
+        os-based)
             info_label="Base SO"
             if command -v apt &>/dev/null; then
                 base="Debian"
@@ -888,7 +934,7 @@ get_info() {
             fi
             info_val="$base"
             ;;
-        ram-type|ram_type)
+        ram-type)
             info_label="RAM Type"
             ram_type="No detectado"
             if command -v dmidecode &>/dev/null; then
@@ -910,7 +956,7 @@ get_info() {
             fi
             info_val="$ram_type"
             ;;
-        casata-version|casata_version)
+        casata-version)
             info_label="Casata Versión"
             if [ -f /usr/local/casata/VERSION ]; then
                 info_val=$(cat /usr/local/casata/VERSION)
@@ -918,7 +964,7 @@ get_info() {
                 info_val="N/A"
             fi
             ;;
-        casata-int-apps|casata_int_apps)
+        casata-int-apps)
             info_label="Casata Apps (Inst.)"
             if [ -d /usr/local/casata/apps ]; then
                 info_val=$(find /usr/local/casata/apps/ -maxdepth 1 -type d 2>/dev/null | tail -n +2 | wc -l)
@@ -926,12 +972,22 @@ get_info() {
                 info_val="0"
             fi
             ;;
-        casata-apps|casata_apps)
+        casata-apps)
             info_label="Casata Apps"
             if [ -d /usr/local/casata/apps ]; then
-                apps=$(find /usr/local/casata/apps/ -maxdepth 1 -type d 2>/dev/null | tail -n +2 | xargs -I{} basename {} | tr '\n' ', ' | sed 's/, $//')
-                [ -z "$apps" ] && apps="Ninguna"
-                info_val="$apps"
+                apps=($(find /usr/local/casata/apps/ -maxdepth 1 -type d 2>/dev/null | tail -n +2 | xargs -I{} basename {}))
+                if [ ${#apps[@]} -eq 0 ]; then
+                    echo "TEXT:${info_label}:Ninguna"
+                else
+                    # Primera aplicación
+                    echo "TEXT:${info_label}:${apps[0]}"
+                    # Resto de aplicaciones con indentación
+                    local indent=$((${#info_label} + 2))  # +2 por ": "
+                    for (( j=1; j<${#apps[@]}; j++ )); do
+                        echo "INDENT:${indent}:${apps[$j]}"
+                    done
+                fi
+                return 0
             else
                 info_val="N/A"
             fi
@@ -940,6 +996,7 @@ get_info() {
             return 1
             ;;
     esac
+    # Solo para módulos que no han hecho return antes
     echo "TEXT:${info_label}:${info_val}"
 }
 
@@ -948,10 +1005,9 @@ info_lines=()
 
 while IFS= read -r module; do
     [ -z "$module" ] && continue
-    line_content=$(get_info "$module")
-    if [ ! -z "$line_content" ]; then
-        info_lines+=("$line_content")
-    fi
+    while IFS= read -r line_content; do
+        [ -n "$line_content" ] && info_lines+=("$line_content")
+    done < <(get_info "$module")
 done < <(get_modules)
 
 # --- CÁLCULO DE MÁXIMO ANCHO DEL LOGO ---
@@ -970,6 +1026,9 @@ fi
 # --- IMPRESIÓN PANTALLA ---
 echo "--------------------------------------------------------------------------------"
 
+# Variable para guardar la indentación actual (usada por líneas INDENT)
+indent_spaces=0
+
 for ((i=0; i<max_lines; i++)); do
     # 1. Imprimir línea del logo
     if [ $i -lt ${#logo[@]} ]; then
@@ -986,15 +1045,27 @@ for ((i=0; i<max_lines; i++)); do
 
         if [ "$current_line" == "SEPARATOR" ]; then
             echo -e "${COLOR}----------------------------------${NC}"
+            indent_spaces=0
 
         elif [ "$current_line" == "COLORS" ]; then
             echo -e "\x1b[40m  \x1b[41m  \x1b[42m  \x1b[43m  \x1b[44m  \x1b[45m  \x1b[46m  \x1b[47m  \x1b[0m"
+            indent_spaces=0
 
-        else
+        elif [[ "$current_line" == INDENT:* ]]; then
+            # Línea de indentación (proviene de módulos multilínea como casata-apps)
+            spaces=$(echo "$current_line" | cut -d: -f2)
+            val=$(echo "$current_line" | cut -d: -f3-)
+            printf "%*s%s\n" "$spaces" "" "$val"
+
+        elif [[ "$current_line" == TEXT:* ]]; then
             clean_line="${current_line#TEXT:}"
             label=$(echo "$clean_line" | cut -d':' -f1)
             val=$(echo "$clean_line" | cut -d':' -f2-)
             echo -e "${COLOR}${BOLD}${label}:${NC} ${val}"
+            # Guardar indentación para posibles líneas INDENT posteriores
+            indent_spaces=$(( ${#label} + 2 ))
+        else
+            echo "$current_line"
         fi
     else
         echo ""

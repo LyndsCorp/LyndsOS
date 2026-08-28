@@ -1,0 +1,21 @@
+{
+  "name": "infernal",
+  "version": "1.34",
+  "apt": [],
+  "pacman": [],
+  "dnf": [],
+  "casata": [],
+  "pip": [],
+  "size": "184,4 KiB",
+  "description": "Infernal, un lenguaje de programación inspirado en Lua + Bash + Python. Es muy bueno para automatización.",
+  "usage": "Ejecuta infernal SCRIPT.inf y ejecutas ese script con Infernal. infernal --help para ayuda.",
+
+  "project": "Aros Legendarios",
+  "is_open_source": true,
+  "source_code": "https://github.com/LyndsCorp/Infernal",
+  "license": "Apache-2.0",
+  "origin": "Lynds Corp.",
+  "developer": "David Baña Szymaniak",
+  "copyright_title": "David Baña Szymaniak",
+  "copyright_year": 2026
+}

@@ -1,0 +1,21 @@
+{
+  "name": "lynds-wallpapers-installer",
+  "version": "https://raw.githubusercontent.com/LyndsCorp/Lynds-Wallpapers-Installer/refs/heads/main/VERSION",
+  "apt": ["python3", "python3-tk", "python3-pil"],
+  "pacman": ["python", "tk", "python-pillow"],
+  "dnf": ["python3", "python3-tkinter", "python3-pillow"],
+  "casata": [],
+  "pip": [],
+  "size": "209,2 KiB",
+  "description": "Instalador de fondos de pantalla sin copyright estricto, ¡haz lo que quieras con ellos!",
+  "usage": "Ejecuta lynds-wallpapers-installer o abre la aplicacion y se abrira la ventana de Lynds Wallpapers Installer.",
+
+  "project": "Monojo Project",
+  "is_open_source": true,
+  "source_code": "https://github.com/LyndsCorp/Lynds-Wallpapers-Installer",
+  "license": "GPL-3.0-or-later",
+  "origin": "Lynds Corp.",
+  "developer": "David Baña Szymaniak & Anxo Torres Álvarez",
+  "copyright_title": "David Baña Szymaniak, Anxo Torres Álvares",
+  "copyright_year": 2026
+}

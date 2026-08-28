@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
-# MonojoMusic — Tkinter + ffplay/ffprobe + MPRIS2 (stream renombrado)
+# Monojo Music — Tkinter + ffplay/ffprobe + MPRIS2
 # Requisitos: ffplay, ffprobe, python3-dbus, python3-gi
-# Depuración en /tmp/monojo_music_debug.log
 
-# Monojo Music 2.0: integración con KDE Connect
-# GPL v3 License, Monojo Project, David Baña Szymaniak
+# Monojo Music 2.3: tema oscuro y claro porque quiero escuchar música de noche
+# Licencia: GPL v3
+# Proyecto: Monojo Project
+# Autor: David Baña Szymaniak
+# Copyright (C) 2026 David Baña Szymaniak
 
 import os
 import sys
@@ -19,11 +21,14 @@ import shutil
 import threading
 
 # ------------------- Depuración -------------------
+DEBUG_ENABLED = True
+
 DEBUG_LOG = "/tmp/monojo_music_debug.log"
 def debug(msg):
-    with open(DEBUG_LOG, "a") as f:
-        f.write(f"[{time.strftime('%H:%M:%S')}] {msg}\n")
-    print(msg, file=sys.stderr)
+    if DEBUG_ENABLED:
+        with open(DEBUG_LOG, "a") as f:
+            f.write(f"[{time.strftime('%H:%M:%S')}] {msg}\n")
+        print(msg, file=sys.stderr)
 
 debug("Iniciando Monojo Music...")
 
@@ -59,6 +64,7 @@ MUSIC_DIR.mkdir(parents=True, exist_ok=True)
 PLAYLIST_DIR.mkdir(parents=True, exist_ok=True)
 
 POLL_INTERVAL_MS = 250
+THEME_POLL_INTERVAL_MS = 2000   # Comprobación periódica del tema del sistema
 
 # ------------------- Detectar ffplay -------------------
 FFPLAY_PATH = shutil.which("ffplay")
@@ -68,8 +74,7 @@ if not FFPLAY_PATH:
 
 FFPLAY_EXEC = FFPLAY_PATH
 
-# --------------- Nombre que queremos en el panel de sonido ---------------
-STREAM_NAME = "Monojo Music"   # Se verá en el mezclador de aplicaciones
+STREAM_NAME = "Monojo Music"
 
 # ---------------- Utilidades de audio ----------------
 def ffprobe_duration(path):
@@ -249,11 +254,9 @@ if MPRIS_AVAILABLE:
                 title = os.path.splitext(base)[0]
                 dur_sec = self.app.current_duration
                 duration_us = dbus.Int64(dur_sec * 1000000)
-                # --- CAMBIO: artista = playlist o Biblioteca ---
                 artist = "Biblioteca"
                 if self.app.from_playlist and self.app.playlist_name:
                     artist = self.app.playlist_name
-                # -------------------------------------------------
                 self._metadata = {
                     "xesam:title": title,
                     "xesam:artist": [artist],
@@ -280,6 +283,148 @@ if MPRIS_AVAILABLE:
         @dbus.service.signal(PROPERTIES_IFACE, signature='sa{sv}as')
         def PropertiesChanged(self, interface_name, changed_properties, invalidated_properties):
             pass
+
+# ---------------- Utilidades de tema ----------------
+DARK_THEME = {
+    'bg': '#2e2e2e',
+    'fg': '#ffffff',
+    'selectbg': '#ffcc00',     # Amarillo
+    'selectfg': '#000000',
+    'entrybg': '#1e1e1e',
+    'entryfg': '#ffffff',
+    'textbg': '#1e1e1e',
+    'textfg': '#ffffff',
+    'scalebg': '#2e2e2e',
+    'scalefg': '#ffffff',
+    'troughcolor': '#555555',
+    'buttonbg': '#3c3c3c',
+    'buttonfg': '#ffffff',
+    'buttonactivebg': '#4a4a4a',
+    'buttonactivefg': '#ffffff',
+    'highlightbackground': '#555555',
+}
+
+LIGHT_THEME = {
+    'bg': '#d9d9d9',           # color por defecto de Tk
+    'fg': '#000000',
+    'selectbg': '#ffcc00',     # Amarillo en selección también en claro
+    'selectfg': '#000000',
+    'entrybg': '#ffffff',
+    'entryfg': '#000000',
+    'textbg': '#ffffff',
+    'textfg': '#000000',
+    'scalebg': '#d9d9d9',
+    'scalefg': '#000000',
+    'troughcolor': '#d9d9d9',
+    'buttonbg': '#d9d9d9',
+    'buttonfg': '#000000',
+    'buttonactivebg': '#ececec',
+    'buttonactivefg': '#000000',
+    'highlightbackground': '#a0a0a0',
+}
+
+def _detect_kde_theme():
+    """Detecta el tema en KDE Plasma usando kreadconfig o kdeglobals."""
+    for kread in ('kreadconfig5', 'kreadconfig6'):
+        if shutil.which(kread):
+            try:
+                result = subprocess.run(
+                    [kread, '--file', 'kdeglobals', '--group', 'General', '--key', 'ColorScheme'],
+                    capture_output=True, text=True, timeout=2
+                )
+                scheme = result.stdout.strip()
+                debug(f"KDE ColorScheme ({kread}): {scheme}")
+                if scheme:
+                    if 'dark' in scheme.lower():
+                        return 'dark'
+                    else:
+                        return 'light'
+            except Exception as e:
+                debug(f"Error con {kread}: {e}")
+
+    kdeglobals = Path.home() / ".config" / "kdeglobals"
+    if kdeglobals.exists():
+        try:
+            content = kdeglobals.read_text()
+            for line in content.splitlines():
+                if line.strip().startswith("ColorScheme="):
+                    scheme = line.split("=", 1)[1].strip()
+                    debug(f"KDE ColorScheme (kdeglobals): {scheme}")
+                    if 'dark' in scheme.lower():
+                        return 'dark'
+                    else:
+                        return 'light'
+        except Exception as e:
+            debug(f"Error leyendo kdeglobals: {e}")
+
+    return None
+
+def _detect_gnome_theme():
+    """Detecta el tema en GNOME usando gsettings."""
+    try:
+        result = subprocess.run(
+            ['gsettings', 'get', 'org.gnome.desktop.interface', 'color-scheme'],
+            capture_output=True, text=True, timeout=2
+        )
+        out = result.stdout.strip().lower()
+        debug(f"GNOME color-scheme: {out}")
+        if 'dark' in out:
+            return 'dark'
+        elif 'light' in out:
+            return 'light'
+    except Exception as e:
+        debug(f"Error con gsettings color-scheme: {e}")
+
+    try:
+        result = subprocess.run(
+            ['gsettings', 'get', 'org.gnome.desktop.interface', 'gtk-theme'],
+            capture_output=True, text=True, timeout=2
+        )
+        out = result.stdout.strip().lower()
+        debug(f"GNOME gtk-theme: {out}")
+        if 'dark' in out:
+            return 'dark'
+        elif 'light' in out:
+            return 'light'
+    except Exception as e:
+        debug(f"Error con gsettings gtk-theme: {e}")
+
+    return None
+
+def detect_system_theme():
+    """Devuelve 'dark' o 'light' según el entorno de escritorio."""
+    debug("Detectando tema del sistema...")
+    desktop = os.environ.get('XDG_CURRENT_DESKTOP', '').lower()
+    session = os.environ.get('DESKTOP_SESSION', '').lower()
+    debug(f"XDG_CURRENT_DESKTOP: {desktop}, DESKTOP_SESSION: {session}")
+
+    if 'kde' in desktop or 'plasma' in session:
+        result = _detect_kde_theme()
+        if result:
+            return result
+
+    if 'gnome' in desktop or 'unity' in desktop or 'cinnamon' in desktop:
+        result = _detect_gnome_theme()
+        if result:
+            return result
+
+    result = _detect_kde_theme()
+    if result:
+        return result
+    result = _detect_gnome_theme()
+    if result:
+        return result
+
+    theme_env = os.environ.get('GTK_THEME', '')
+    if theme_env:
+        debug(f"GTK_THEME: {theme_env}")
+        if 'dark' in theme_env.lower():
+            return 'dark'
+        elif 'light' in theme_env.lower():
+            return 'light'
+
+    debug("Sin información fiable, asumiendo claro")
+    return 'light'
 
 # ---------------- Aplicación principal ----------------
 class MonojoMusicApp:
@@ -315,14 +460,37 @@ class MonojoMusicApp:
         self.shuffle_history = []
         self.undo_stack = []
 
+        # Ventanas informativas
+        self.guide_window = None
+        self.credits_window = None
+
+        # Tema
+        self.current_theme = detect_system_theme()
+        self.open_toplevels = []
+
         # Construir interfaz
         self.build_ui()
+        self.apply_theme_to_widget(self.root)
+
+        # Asegurar que la raíz quede correctamente coloreada
+        if self.current_theme == 'dark':
+            self.root.configure(bg=DARK_THEME['bg'],
+                                highlightbackground=DARK_THEME['bg'],
+                                highlightcolor=DARK_THEME['bg'])
+
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
         # Inicializar datos
         self.refresh_library()
         self.reload_playlist_listbox()
         self.root.after(POLL_INTERVAL_MS, self.poll_playback)
+        self.root.after(THEME_POLL_INTERVAL_MS, self.poll_theme_changes)
+
+        if self.lib_files:
+            self.lib_listbox.selection_set(0)
+            self.lib_listbox.activate(0)
+            self.lib_listbox.see(0)
+            self.lib_listbox.focus_set()
 
         # MPRIS
         self.mpris = None
@@ -334,8 +502,239 @@ class MonojoMusicApp:
                 debug("MPRIS iniciado correctamente.")
             except Exception as e:
                 debug(f"No se pudo iniciar MPRIS: {e}")
+
+    # --------------- Funciones de tema ---------------
+    def apply_theme_to_widget(self, widget):
+        """Aplica el tema actual (claro u oscuro) a un widget y sus hijos."""
+        colors = DARK_THEME if self.current_theme == 'dark' else LIGHT_THEME
+        cls = widget.winfo_class()
+        try:
+            if cls in ('Frame', 'Labelframe', 'Toplevel', 'Tk'):
+                widget.configure(bg=colors['bg'])
+                widget.configure(highlightbackground=colors['bg'], highlightcolor=colors['bg'])
+                if cls != 'Labelframe':
+                    widget.configure(bd=0)
+            elif cls == 'Label':
+                widget.configure(bg=colors['bg'], fg=colors['fg'])
+                widget.configure(highlightbackground=colors['bg'], highlightcolor=colors['bg'])
+            elif cls == 'Listbox':
+                widget.configure(
+                    bg=colors['entrybg'], fg=colors['entryfg'],
+                    selectbackground=colors['selectbg'], selectforeground=colors['selectfg'],
+                    highlightbackground=colors['highlightbackground'],
+                    highlightcolor=colors['highlightbackground'],
+                    highlightthickness=1 if self.current_theme == 'light' else 0,
+                    relief='solid' if self.current_theme == 'light' else 'flat'
+                )
+            elif cls == 'Scale':
+                widget.configure(
+                    bg=colors['scalebg'], fg=colors['scalefg'],
+                    troughcolor=colors['troughcolor'],
+                    highlightbackground=colors['highlightbackground'],
+                    highlightcolor=colors['highlightbackground'],
+                    highlightthickness=1 if self.current_theme == 'light' else 0
+                )
+            elif cls in ('Text', 'Entry'):
+                widget.configure(
+                    bg=colors['textbg'], fg=colors['textfg'],
+                    insertbackground=colors['fg'],
+                    selectbackground=colors['selectbg'], selectforeground=colors['selectfg'],
+                    highlightbackground=colors['highlightbackground'],
+                    highlightcolor=colors['highlightbackground'],
+                    highlightthickness=1 if self.current_theme == 'light' else 0
+                )
+            elif cls == 'Button':
+                widget.configure(
+                    bg=colors['buttonbg'], fg=colors['buttonfg'],
+                    activebackground=colors['buttonactivebg'],
+                    activeforeground=colors['buttonactivefg'],
+                    highlightbackground=colors['highlightbackground'],
+                    highlightcolor=colors['highlightbackground'],
+                    highlightthickness=1 if self.current_theme == 'light' else 0,
+                    relief='raised' if self.current_theme == 'light' else 'flat'
+                )
+            elif cls in ('Checkbutton', 'Radiobutton'):
+                widget.configure(
+                    bg=colors['bg'], fg=colors['fg'],
+                    activebackground=colors['bg'],
+                    activeforeground=colors['fg'],
+                    selectcolor=colors['entrybg'],
+                    highlightbackground=colors['bg'],
+                    highlightcolor=colors['bg']
+                )
+        except tk.TclError as e:
+            debug(f"Error aplicando tema a {cls}: {e}")
+
+        for child in widget.winfo_children():
+            self.apply_theme_to_widget(child)
+
+    def apply_theme_to_all(self):
+        """Aplica el tema a la ventana principal y a todas las emergentes."""
+        # Primero, asegurar que la raíz tiene el color correcto
+        if self.current_theme == 'dark':
+            self.root.configure(bg=DARK_THEME['bg'],
+                                highlightbackground=DARK_THEME['bg'],
+                                highlightcolor=DARK_THEME['bg'])
         else:
-            debug("MPRIS no disponible. La integración multimedia no se activará.")
+            self.root.configure(bg=LIGHT_THEME['bg'],
+                                highlightbackground=LIGHT_THEME['bg'],
+                                highlightcolor=LIGHT_THEME['bg'])
+        # Luego, aplicar a todos los widgets (incluida la raíz)
+        for widget in [self.root] + self.open_toplevels[:]:
+            if widget.winfo_exists():
+                self.apply_theme_to_widget(widget)
+        # Forzar actualización visual
+        self.root.update_idletasks()
+        self.root.update()
+
+    def poll_theme_changes(self):
+        new_theme = detect_system_theme()
+        if new_theme != self.current_theme:
+            debug(f"Cambio de tema detectado: {self.current_theme} -> {new_theme}")
+            self.current_theme = new_theme
+            self.apply_theme_to_all()
+        self.root.after(THEME_POLL_INTERVAL_MS, self.poll_theme_changes)
+
+    # --------------- Ventana informativa sin botón OK ---------------
+    def _info(self, title, message):
+        dlg = tk.Toplevel(self.root)
+        dlg.title(title)
+        dlg.transient(self.root)
+        dlg.resizable(False, False)
+
+        tk.Label(dlg, text=message, wraplength=450, justify="left",
+                 font=("TkDefaultFont", 12), padx=20, pady=20).pack()
+
+        dlg.wait_visibility()
+        dlg.grab_set()
+
+        dlg.bind("<Escape>", lambda e: dlg.destroy())
+        dlg.bind("<q>", lambda e: dlg.destroy())
+        dlg.bind("<Q>", lambda e: dlg.destroy())
+        dlg.bind("<Return>", lambda e: dlg.destroy())
+
+        dlg.focus_set()
+        dlg.update_idletasks()
+        x = self.root.winfo_x() + (self.root.winfo_width() - dlg.winfo_width()) // 2
+        y = self.root.winfo_y() + (self.root.winfo_height() - dlg.winfo_height()) // 2
+        dlg.geometry(f"+{x}+{y}")
+
+        self.apply_theme_to_widget(dlg)
+        self.open_toplevels.append(dlg)
+        dlg.bind("<Destroy>", lambda e: self.open_toplevels.remove(dlg) if dlg in self.open_toplevels else None)
+
+    # ==================== Ventanas de ayuda (toggle) ====================
+    def toggle_guide(self):
+        if self.guide_window and self.guide_window.winfo_exists():
+            self.guide_window.destroy()
+            self.guide_window = None
+            return
+        self._show_guide_window()
+
+    def toggle_credits(self):
+        if self.credits_window and self.credits_window.winfo_exists():
+            self.credits_window.destroy()
+            self.credits_window = None
+            return
+        self._show_credits_window()
+
+    def _show_guide_window(self):
+        guia_texto = (
+            "--- Atajos de Teclado ---\n\n"
+            "• Control + Z: Deshacer última acción\n"
+            "• Eliminar (Backspace): Elimina de la biblioteca los archivos seleccionados\n"
+            "• Tecla A: Añadir nueva música a la biblioteca\n"
+            "• Tecla R: Renombrar canción seleccionada de la biblioteca\n"
+            "• Tecla M: Añadir canción seleccionada a la playlist\n"
+            "• Tecla N: Quitar canción seleccionada de la playlist\n"
+            "• Tecla I: Subir archivo en la playlist ↑\n"
+            "• Tecla K: Bajar archivo en la playlist ↓\n"
+            "• Flecha Derecha (→): Mover foco a Playlist\n"
+            "• Flecha Izquierda (←): Mover foco a Biblioteca\n"
+            "• Flecha Arriba (↑): Seleccionar la canción de arriba\n"
+            "• Flecha Abajo (↓): Seleccionar la canción de abajo\n"
+            "• Enter o Tecla Z: Reproducir canción seleccionada\n"
+            "• Tecla X: Detener reproducción (Parar)\n"
+            "• Tecla C: Pausar / Reanudar la reproducción\n"
+            "• Tecla V: Reproducir toda la playlist activa\n"
+            "• Tecla P: Nueva playlist\n"
+            "• Tecla O: Cargar playlist (Enter para seleccionar)\n"
+            "• Tecla L: Activar/desactivar bucle\n"
+            "• Tecla S: Activar/desactivar modo aleatorio\n"
+            "• Control derecho: Créditos\n"
+            "• Tecla ?: Mostrar esta ayuda\n\n"
+            "Pulsa ? de nuevo, Escape o Q para cerrar."
+        )
+
+        dlg = tk.Toplevel(self.root)
+        dlg.title("Guía de Controles")
+        dlg.transient(self.root)
+        dlg.grab_set()
+        dlg.geometry("560x550")
+        dlg.resizable(False, False)
+
+        text_widget = tk.Text(dlg, wrap="word", font=("TkDefaultFont", 10), padx=10, pady=10)
+        text_widget.insert("1.0", guia_texto)
+        text_widget.config(state="disabled")
+        text_widget.pack(fill="both", expand=True, padx=12, pady=12)
+
+        def _on_mousewheel(event):
+            text_widget.yview_scroll(int(-1*(event.delta/120)), "units")
+        text_widget.bind("<MouseWheel>", _on_mousewheel)
+        text_widget.bind("<Button-4>", lambda e: text_widget.yview_scroll(-1, "units"))
+        text_widget.bind("<Button-5>", lambda e: text_widget.yview_scroll(1, "units"))
+
+        dlg.bind("<question>", lambda e: self._close_guide(dlg))
+        dlg.bind("<Escape>", lambda e: self._close_guide(dlg))
+        dlg.bind("<q>", lambda e: self._close_guide(dlg))
+        dlg.bind("<Q>", lambda e: self._close_guide(dlg))
+        dlg.protocol("WM_DELETE_WINDOW", lambda: self._close_guide(dlg))
+        self.guide_window = dlg
+        dlg.focus_set()
+
+        self.apply_theme_to_widget(dlg)
+        self.open_toplevels.append(dlg)
+        dlg.bind("<Destroy>", lambda e: self.open_toplevels.remove(dlg) if dlg in self.open_toplevels else None)
+
+    def _close_guide(self, dlg):
+        if self.guide_window == dlg:
+            dlg.destroy()
+            self.guide_window = None
+
+    def _show_credits_window(self):
+        creditos = (
+            "Monojo Music 2.3\n\n"
+            "Desarrollado por David Baña Szymaniak\n"
+            "Monojo Project\n\n"
+            "Licencia GPL v3 o posterior\n\n"
+            "Usa ffplay como backend."
+            )
+        dlg = tk.Toplevel(self.root)
+        dlg.title("Créditos")
+        dlg.transient(self.root)
+        dlg.grab_set()
+        dlg.resizable(False, False)
+        tk.Label(dlg, text=creditos, wraplength=400, justify="left", padx=20, pady=20).pack()
+        dlg.bind("<Control_R>", lambda e: self._close_credits(dlg))
+        dlg.bind("<Escape>", lambda e: self._close_credits(dlg))
+        dlg.bind("<q>", lambda e: self._close_credits(dlg))
+        dlg.bind("<Q>", lambda e: self._close_credits(dlg))
+        dlg.protocol("WM_DELETE_WINDOW", lambda: self._close_credits(dlg))
+        dlg.update_idletasks()
+        x = self.root.winfo_x() + (self.root.winfo_width() - dlg.winfo_width()) // 2
+        y = self.root.winfo_y() + (self.root.winfo_height() - dlg.winfo_height()) // 2
+        dlg.geometry(f"+{x}+{y}")
+        self.credits_window = dlg
+        dlg.focus_set()
+
+        self.apply_theme_to_widget(dlg)
+        self.open_toplevels.append(dlg)
+        dlg.bind("<Destroy>", lambda e: self.open_toplevels.remove(dlg) if dlg in self.open_toplevels else None)
+
+    def _close_credits(self, dlg):
+        if self.credits_window == dlg:
+            dlg.destroy()
+            self.credits_window = None
 
     # ==================== INTERFAZ GRÁFICA ====================
     def build_ui(self):
@@ -344,7 +743,8 @@ class MonojoMusicApp:
         tk.Button(top, text="Nueva Playlist", command=self.new_playlist).pack(side="left", padx=4)
         tk.Button(top, text="Guardar Playlist", command=self.save_playlist).pack(side="left", padx=4)
         tk.Button(top, text="Cargar Playlist", command=self.choose_and_load_playlist).pack(side="left", padx=4)
-        tk.Button(top, text="Atajos de teclado", command=self.show_guide).pack(side="right", padx=4)
+        tk.Button(top, text="Créditos", command=self.toggle_credits).pack(side="right", padx=4)
+        tk.Button(top, text="Atajos de teclado", command=self.toggle_guide).pack(side="right", padx=4)
 
         main = tk.Frame(self.root)
         main.pack(fill="both", expand=True, padx=6, pady=6)
@@ -409,28 +809,7 @@ class MonojoMusicApp:
 
         self.root.bind("<Key>", self.on_key_press)
 
-    def show_guide(self):
-        guia = (
-            "--- Atajos de Teclado ---\n\n"
-            "• Control + Z: Deshacer última acción\n"
-            "• Eliminar (Backspace): Elimina de la biblioteca los archivos seleccionados\n"
-            "• Tecla A: Añadir nueva música a la biblioteca\n"
-            "• Tecla R: Renombrar canción seleccionada de la biblioteca\n"
-            "• Tecla M: Añadir canción seleccionada a la playlist\n"
-            "• Tecla N: Quitar canción seleccionada de la playlist\n"
-            "• Tecla I: Subir archivo en la playlist ↑\n"
-            "• Tecla K: Bajar archivo en la playlist ↓\n"
-            "• Flecha Derecha (→): Mover foco a Playlist\n"
-            "• Flecha Izquierda (←): Mover foco a Biblioteca\n"
-            "• Flecha Arriba (↑): Seleccionar la canción de arriba\n"
-            "• Flecha Abajo (↓): Seleccionar la canción de abajo\n"
-            "• Enter o Tecla Z: Reproducir canción seleccionada\n"
-            "• Tecla X: Detener reproducción (Parar)\n"
-            "• Tecla C: Pausar / Reanudar la reproducción\n"
-            "• Tecla V: Reproducir toda la playlist activa"
-        )
-        messagebox.showinfo("Guía de Controles", guia)
-
+    # ==================== MÉTODOS DE TECLADO Y ACCIONES ====================
     def on_key_press(self, event):
         try:
             if event.widget.winfo_class() in ("Entry", "Text", "Spinbox"):
@@ -440,6 +819,25 @@ class MonojoMusicApp:
         is_ctrl = (event.state & 0x0004) != 0
         sym = event.keysym
         char = event.char.lower() if event.char else ""
+
+        if char == 'p':
+            self.new_playlist()
+            return
+        if char == 'o':
+            self.choose_and_load_playlist()
+            return
+        if char == 'l':
+            self.toggle_loop()
+            return
+        if char == 's':
+            self.toggle_shuffle()
+            return
+        if sym == "Control_R":
+            self.toggle_credits()
+            return
+        if char == '?':
+            self.toggle_guide()
+            return
 
         if is_ctrl and sym.lower() == "z":
             self.undo_action()
@@ -507,7 +905,7 @@ class MonojoMusicApp:
                     self.refresh_library()
                     self.reload_playlist_listbox()
             except Exception as e:
-                messagebox.showerror("Error Deshacer", f"No se pudo revertir el renombrado:\n{e}")
+                self._info("Error", f"No se pudo revertir el renombrado:\n{e}")
 
     def switch_focus_to_playlist(self):
         sel = self.lib_listbox.curselection()
@@ -585,14 +983,19 @@ class MonojoMusicApp:
                     dst.write(src.read())
                 added += 1
             except Exception:
-                messagebox.showwarning("Error", f"No se pudo copiar: {p}")
+                self._info("Error", f"No se pudo copiar: {p}")
         if added:
             self.refresh_library()
+            if self.lib_files:
+                self.lib_listbox.selection_set(0)
+                self.lib_listbox.activate(0)
+                self.lib_listbox.see(0)
+                self.lib_listbox.focus_set()
 
     def delete_music(self):
         sel = list(self.lib_listbox.curselection())
         if not sel:
-            messagebox.showinfo("Eliminar MP3", "Selecciona archivos en la biblioteca para eliminar.")
+            self._info("Eliminar MP3", "Selecciona archivos en la biblioteca para eliminar.")
             return
         names = [self.lib_files[i] for i in sel]
         if not messagebox.askyesno("Confirmar", f"¿Eliminar {len(names)} archivo(s) de Músicas?"):
@@ -603,16 +1006,21 @@ class MonojoMusicApp:
                 if os.path.exists(full):
                     os.remove(full)
             except Exception:
-                messagebox.showwarning("Error", f"No se pudo borrar: {n}")
+                self._info("Error", f"No se pudo borrar: {n}")
         self.undo_stack.clear()
         self.refresh_library()
         self.playlist_items = [x for x in self.playlist_items if x not in names]
         self.reload_playlist_listbox()
+        if self.lib_files:
+            self.lib_listbox.selection_set(0)
+            self.lib_listbox.activate(0)
+            self.lib_listbox.see(0)
+            self.lib_listbox.focus_set()
 
     def rename_music(self):
         sel = self.lib_listbox.curselection()
         if not sel:
-            messagebox.showinfo("Renombrar", "Selecciona una canción en la biblioteca para renombrar.")
+            self._info("Renombrar", "Selecciona una canción en la biblioteca para renombrar.")
             return
         idx = sel[0]
         old_fullname = self.lib_files[idx]
@@ -624,12 +1032,12 @@ class MonojoMusicApp:
         old_path = os.path.join(MUSIC_DIR, old_fullname)
         new_path = os.path.join(MUSIC_DIR, new_fullname)
         if os.path.exists(new_path):
-            messagebox.showwarning("Atención", f"Ya existe una canción con el nombre '{new_base}'. No se hará nada.")
+            self._info("Atención", f"Ya existe una canción con el nombre '{new_base}'. No se hará nada.")
             return
         try:
             os.rename(old_path, new_path)
         except Exception as e:
-            messagebox.showerror("Error", f"No se pudo renombrar el archivo:\n{e}")
+            self._info("Error", f"No se pudo renombrar el archivo:\n{e}")
             return
         self.undo_stack.append({
             "action": "rename",
@@ -655,7 +1063,7 @@ class MonojoMusicApp:
         self.undo_stack.clear()
         self.reload_playlist_listbox()
         self.update_playlist_label()
-        messagebox.showinfo("Playlist", f"Playlist '{name}' creada (vacía).")
+        self._info("Playlist", f"Playlist '{name}' creada (vacía).")
 
     def save_playlist(self):
         if not self.playlist_name:
@@ -669,50 +1077,73 @@ class MonojoMusicApp:
                 for it in self.playlist_items:
                     f.write(it + "\n")
             self.update_playlist_label()
-            messagebox.showinfo("Guardado", f"Playlist guardada: {path}")
+            self._info("Guardado", f"Playlist guardada: {path}")
         except Exception as e:
-            messagebox.showerror("Error", f"No se pudo guardar playlist:\n{e}")
+            self._info("Error", f"No se pudo guardar playlist:\n{e}")
 
     def choose_and_load_playlist(self):
         files = [f for f in os.listdir(PLAYLIST_DIR) if f.endswith(".txt")]
         if not files:
-            messagebox.showinfo("Playlists", "No hay playlists guardadas.")
+            self.new_playlist()
             return
+
         top = tk.Toplevel(self.root)
         top.title("Seleccionar Playlist")
         top.geometry("300x400")
         top.transient(self.root)
         top.grab_set()
+
         tk.Label(top, text="Selecciona una playlist para cargar:").pack(pady=10)
-        frame = tk.Frame(top)
-        frame.pack(fill="both", expand=True, padx=15, pady=5)
-        scrollbar = tk.Scrollbar(frame)
-        scrollbar.pack(side="right", fill="y")
-        listbox = tk.Listbox(frame, yscrollcommand=scrollbar.set, selectmode="single")
-        listbox.pack(side="left", fill="both", expand=True)
-        scrollbar.config(command=listbox.yview)
+
+        listbox = tk.Listbox(top, selectmode="single", exportselection=False)
+        listbox.pack(fill="both", expand=True, padx=15, pady=5)
+
         for f in files:
             listbox.insert(tk.END, f[:-4])
+
+        if listbox.size() > 0:
+            listbox.selection_set(0)
+            listbox.activate(0)
+            listbox.focus_set()
+
+        def move_selection(delta):
+            cur = listbox.curselection()
+            if not cur:
+                new_idx = 0
+            else:
+                new_idx = cur[0] + delta
+            if 0 <= new_idx < listbox.size():
+                listbox.selection_clear(0, tk.END)
+                listbox.selection_set(new_idx)
+                listbox.activate(new_idx)
+                listbox.see(new_idx)
+            return "break"
+
+        listbox.bind("<Up>", lambda e: move_selection(-1))
+        listbox.bind("<Down>", lambda e: move_selection(1))
 
         def on_load():
             sel = listbox.curselection()
             if not sel:
-                messagebox.showwarning("Atención", "Selecciona una playlist de la lista.")
                 return
             choice = listbox.get(sel[0])
             top.destroy()
-            self._load_playlist_file(choice)
+            self.root.after(50, lambda: self._load_playlist_file(choice))
 
         listbox.bind("<Double-Button-1>", lambda e: on_load())
-        btn_frame = tk.Frame(top)
-        btn_frame.pack(pady=10)
-        tk.Button(btn_frame, text="Cargar", command=on_load).pack(side="left", padx=10)
-        tk.Button(btn_frame, text="Cancelar", command=top.destroy).pack(side="right", padx=10)
+        listbox.bind("<Return>", lambda e: on_load())
+        top.bind("<Escape>", lambda e: top.destroy())
+        top.bind("<q>", lambda e: top.destroy())
+        top.bind("<Q>", lambda e: top.destroy())
+
+        self.apply_theme_to_widget(top)
+        self.open_toplevels.append(top)
+        top.bind("<Destroy>", lambda e: self.open_toplevels.remove(top) if top in self.open_toplevels else None)
 
     def _load_playlist_file(self, choice):
         path = os.path.join(PLAYLIST_DIR, choice + ".txt")
         if not os.path.exists(path):
-            messagebox.showerror("Error", "No existe esa playlist.")
+            self._info("Error", "No existe esa playlist.")
             return
         self.playlist_name = choice
         loaded = []
@@ -725,7 +1156,7 @@ class MonojoMusicApp:
         self.undo_stack.clear()
         self.reload_playlist_listbox()
         self.update_playlist_label()
-        messagebox.showinfo("Cargada", f"Playlist '{choice}' cargada con {len(loaded)} canciones.")
+        self._info("Cargada", f"Playlist '{choice}' cargada con {len(loaded)} canciones.")
 
     def reload_playlist_listbox(self):
         self.pl_listbox.delete(0, tk.END)
@@ -739,12 +1170,12 @@ class MonojoMusicApp:
         self.playlist_label.config(text=f"Playlist actual: {display}")
 
     def add_selected_to_playlist(self):
-        if not self.playlist_items:
-            messagebox.showwarning("Sin Playlist", "No hay ninguna playlist abierta. Crea o carga una playlist primero.")
+        if not self.playlist_name:
+            self._info("Sin Playlist", "No hay ninguna playlist abierta. Crea o carga una playlist primero.")
             return
         sel = list(self.lib_listbox.curselection())
         if not sel:
-            messagebox.showwarning("Sin selección", "Selecciona una canción en la Biblioteca para añadir a Playlist.")
+            self._info("Sin selección", "Selecciona una canción en la Biblioteca para añadir a Playlist.")
             return
         added_items = []
         for i in sel:
@@ -786,15 +1217,15 @@ class MonojoMusicApp:
 
     def move_in_playlist_up(self):
         if not self.playlist_items:
-            messagebox.showwarning("Sin Playlist", "No hay ninguna playlist abierta.")
+            self._info("Sin Playlist", "No hay ninguna playlist abierta.")
             return
         sel = self.pl_listbox.curselection()
         if not sel:
-            messagebox.showinfo("Sin selección", "Selecciona una canción en la Playlist para mover.")
+            self._info("Sin selección", "Selecciona una canción en la Playlist para mover.")
             return
         i = sel[0]
         if i == 0:
-            messagebox.showinfo("Límite", "Esta canción ya está en la primera posición.")
+            self._info("Límite", "Esta canción ya está en la primera posición.")
             return
         j = i - 1
         self.playlist_items[i], self.playlist_items[j] = self.playlist_items[j], self.playlist_items[i]
@@ -804,15 +1235,15 @@ class MonojoMusicApp:
 
     def move_in_playlist_down(self):
         if not self.playlist_items:
-            messagebox.showwarning("Sin Playlist", "No hay ninguna playlist abierta.")
+            self._info("Sin Playlist", "No hay ninguna playlist abierta.")
             return
         sel = self.pl_listbox.curselection()
         if not sel:
-            messagebox.showinfo("Sin selección", "Selecciona una canción en la Playlist para mover.")
+            self._info("Sin selección", "Selecciona una canción en la Playlist para mover.")
             return
         i = sel[0]
         if i == len(self.playlist_items) - 1:
-            messagebox.showinfo("Límite", "Esta canción ya está en la última posición.")
+            self._info("Límite", "Esta canción ya está en la última posición.")
             return
         j = i + 1
         self.playlist_items[i], self.playlist_items[j] = self.playlist_items[j], self.playlist_items[i]
@@ -854,7 +1285,6 @@ class MonojoMusicApp:
         self.paused_flag = False
         self.pause_btn.config(text="Pausar")
 
-        # Inyectar PULSE_PROP para renombrar el stream de audio
         env = os.environ.copy()
         env["PULSE_PROP"] = f"application.name={STREAM_NAME}"
 
@@ -871,7 +1301,7 @@ class MonojoMusicApp:
                 self.mpris.update_metadata()
                 self.mpris.emit_properties_changed()
         except FileNotFoundError:
-            messagebox.showerror("Error", "No se pudo ejecutar el reproductor (ffplay).")
+            self._info("Error", "No se pudo ejecutar el reproductor (ffplay).")
             self.play_proc = None
             self.is_playing = False
 
@@ -930,10 +1360,9 @@ class MonojoMusicApp:
         else:
             return min(self.play_start_time, self.current_duration) if self.current_duration > 0 else self.play_start_time
 
-    # ==================== CONTROL DE PLAYLIST ====================
     def play_playlist(self, start_index=0):
         if not self.playlist_items:
-            messagebox.showinfo("Playlist", "La playlist está vacía.")
+            self._info("Playlist", "La playlist está vacía.")
             return
         if start_index < 0 or start_index >= len(self.playlist_items):
             start_index = 0
@@ -941,7 +1370,7 @@ class MonojoMusicApp:
         name = self.playlist_items[self.playlist_index]
         path = os.path.join(MUSIC_DIR, name)
         if not os.path.exists(path):
-            messagebox.showerror("Error", f"No existe: {name}")
+            self._info("Error", f"No existe: {name}")
             return
         self.play_file(path, start_at=0.0, from_playlist=True)
 
@@ -1000,7 +1429,6 @@ class MonojoMusicApp:
         if os.path.exists(path):
             self.play_file(path, start_at=0.0, from_playlist=True)
 
-    # ==================== SIGUIENTE / ANTERIOR ====================
     def next_track(self):
         if self.from_playlist and self.playlist_items:
             self.advance_playlist()
@@ -1086,7 +1514,6 @@ class MonojoMusicApp:
         name = lib_items[idx]
         self.play_file(os.path.join(MUSIC_DIR, name), start_at=0.0, from_playlist=False)
 
-    # ==================== PROGRESO ====================
     def on_progress_drag(self, value):
         try:
             v = float(value)
@@ -1114,7 +1541,6 @@ class MonojoMusicApp:
         s = sec % 60
         return f"{m:02d}:{s:02d}"
 
-    # ==================== POLLING ====================
     def poll_playback(self):
         try:
             if self.is_playing and self.play_proc:
@@ -1180,7 +1606,6 @@ class MonojoMusicApp:
                 pass
         self.now_lbl.config(text=text)
 
-    # ==================== TOGGLES ====================
     def toggle_loop(self):
         self.loop_flag = not self.loop_flag
         self.loop_btn.config(text=f"Bucle: {'ON' if self.loop_flag else 'OFF'}")
@@ -1195,14 +1620,7 @@ class MonojoMusicApp:
             self.mpris.emit_properties_changed()
 
     def on_close(self):
-        if self.playlist_name:
-            try:
-                path = os.path.join(PLAYLIST_DIR, self.playlist_name + ".txt")
-                with open(path, "w", encoding="utf-8") as f:
-                    for it in self.playlist_items:
-                        f.write(it + "\n")
-            except Exception:
-                pass
+        # Detener reproducción y cerrar procesos
         try:
             if self.play_proc:
                 self.play_proc.terminate()
@@ -1212,6 +1630,22 @@ class MonojoMusicApp:
                     self.play_proc.kill()
         except Exception:
             pass
+        # Guardar playlist actual
+        if self.playlist_name:
+            try:
+                path = os.path.join(PLAYLIST_DIR, self.playlist_name + ".txt")
+                with open(path, "w", encoding="utf-8") as f:
+                    for it in self.playlist_items:
+                        f.write(it + "\n")
+            except Exception:
+                pass
+        # Cerrar todas las ventanas hijas
+        for toplevel in self.open_toplevels[:]:
+            try:
+                if toplevel.winfo_exists():
+                    toplevel.destroy()
+            except Exception:
+                pass
         self.root.destroy()
 
 # ==================== ARRANQUE ====================
@@ -1219,7 +1653,6 @@ def start_glib_loop():
     if MPRIS_AVAILABLE:
         try:
             loop = GLib.MainLoop()
-            debug("Bucle GLib iniciado.")
             loop.run()
         except Exception as e:
             debug(f"Error en el bucle GLib: {e}")
@@ -1229,29 +1662,23 @@ if __name__ == "__main__":
     try:
         if MPRIS_AVAILABLE:
             threading.Thread(target=start_glib_loop, daemon=True).start()
-            debug("Hilo GLib lanzado.")
+        root = tk.Tk(className="monojo_music_main")
+        app = MonojoMusicApp(root)
+        if len(sys.argv) > 1:
+            for path in sys.argv[1:]:
+                if os.path.isfile(path):
+                    dest = os.path.join(MUSIC_DIR, os.path.basename(path))
+                    if not os.path.exists(dest):
+                        shutil.copy2(path, MUSIC_DIR)
+            app.refresh_library()
+            first = os.path.basename(sys.argv[1])
+            full = os.path.join(MUSIC_DIR, first)
+            if os.path.exists(full):
+                app.play_file(full)
+                debug(f"Reproduciendo archivo pasado por argumento: {full}")
+        root.mainloop()
     except Exception as e:
-        debug(f"Error al lanzar hilo GLib: {e}")
-
-    debug("Creando ventana Tk...")
-    root = tk.Tk(className="monojo_music_main")
-    debug("Ventana Tk creada.")
-    app = MonojoMusicApp(root)
-    debug("App instanciada.")
-
-    if len(sys.argv) > 1:
-        for path in sys.argv[1:]:
-            if os.path.isfile(path):
-                dest = os.path.join(MUSIC_DIR, os.path.basename(path))
-                if not os.path.exists(dest):
-                    shutil.copy2(path, MUSIC_DIR)
-        app.refresh_library()
-        first = os.path.basename(sys.argv[1])
-        full = os.path.join(MUSIC_DIR, first)
-        if os.path.exists(full):
-            app.play_file(full)
-            debug(f"Reproduciendo archivo pasado por argumento: {full}")
-
-    debug("Iniciando bucle principal de Tk...")
-    root.mainloop()
-    debug("Bucle principal terminado.")
+        debug(f"ERROR FATAL: {e}")
+        import traceback
+        debug(traceback.format_exc())
+        sys.exit(1)
