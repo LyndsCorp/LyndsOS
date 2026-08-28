@@ -12,3 +12,5 @@
 /config/packages.chroot/
 /config/rootfs/
 /config/source
+
+/config/includes.chroot/usr/local/casata/apps/zen-browser-amd64/
