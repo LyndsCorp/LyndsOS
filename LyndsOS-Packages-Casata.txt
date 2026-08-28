@@ -1,0 +1,12 @@
+mc-lan
+md-lan
+monojo-music
+monojo-calculator
+
+lynds-wallpapers-installer
+lyndshub
+lyndsfetch
+
+infernal
+
+zen-browser-amd64
