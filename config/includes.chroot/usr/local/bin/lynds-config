@@ -22,4 +22,7 @@ echo "Europe/Madrid" > /etc/timezone
 
 echo "Hora configurada a la de Madrid."
 
+mkdir -p /mnt/lyndsos
+echo "Carpeta de instalación creada"
+
 exit 0
