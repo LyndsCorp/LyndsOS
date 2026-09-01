@@ -1,14 +1,20 @@
 #!/bin/bash
 # /usr/local/casata/modules/upgrade.sh
-# Actualiza paquetes instalados a la última versión disponible en el repositorio.
+# Actualiza paquetes instalados globalmente (sistema) a la última versión disponible en el repositorio.
+# Solo se permiten actualizaciones globales
+# Copyright (C) 2026 David Baña Szymaniak
 
 shopt -s nullglob
 set -euo pipefail
 
+# Cargar librería de historial
+if [ -f "/usr/local/casata/lib/history-lib.sh" ]; then
+    source "/usr/local/casata/lib/history-lib.sh"
+fi
+
 CASATA_ROOT="/usr/local/casata"
 DATA_DIR="$CASATA_ROOT/data"
 SYS_DIR="$CASATA_ROOT/apps"
-USR_DIR="$HOME/.local/casata/apps"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -16,108 +22,117 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+# ------------------------------------------------------------
+# Función para resolver versiones que pueden ser URLs
+# Solo se aplica al campo "version" de los metadatos JSON
+# ------------------------------------------------------------
+resolve_version() {
+    local version_input="$1"
+    if [[ "$version_input" =~ ^[Hh][Tt][Tt][Pp] ]]; then
+        local temp_file=$(mktemp)
+        if wget -q --timeout=10 --tries=1 -O "$temp_file" "$version_input" 2>/dev/null; then
+            local resolved=$(cat "$temp_file" | tr -d '[:space:]')
+            rm -f "$temp_file"
+            if [ -n "$resolved" ]; then
+                echo "$resolved"
+            else
+                rm -f "$temp_file"
+                echo -e "${RED}Error: La URL de versión devolvió contenido vacío.${NC}" >&2
+                return 1
+            fi
+        else
+            rm -f "$temp_file"
+            echo -e "${RED}Error: No se pudo descargar la versión desde $version_input.${NC}" >&2
+            return 1
+        fi
+    else
+        echo "$version_input"
+    fi
+}
+
 # Procesar argumentos
 AUTO_YES=0
-USER_ONLY=0
-SYSTEM_ONLY=0
 
 for arg in "$@"; do
     case "$arg" in
         -y|--yes)      AUTO_YES=1 ;;
-        --user)        USER_ONLY=1 ;;
-        --system)      SYSTEM_ONLY=1 ;;
         *) echo -e "${RED}Opción desconocida: $arg${NC}"; exit 1 ;;
     esac
 done
 
-if [ $USER_ONLY -eq 1 ] && [ $SYSTEM_ONLY -eq 1 ]; then
-    echo -e "${RED}No se pueden usar --user y --system simultáneamente.${NC}"
-    exit 1
-fi
+# Directorio de paquetes globales (único permitido)
+DIR="$SYS_DIR"
 
-# Directorios a revisar según opciones
-DIRS=()
-if [ $SYSTEM_ONLY -eq 1 ]; then
-    DIRS=("$SYS_DIR")
-elif [ $USER_ONLY -eq 1 ]; then
-    DIRS=("$USR_DIR")
-else
-    DIRS=("$SYS_DIR" "$USR_DIR")
-fi
-
-# Recopilar paquetes instalados: lista de "pkg|version|location"
+# Recopilar paquetes instalados: lista de "pkg|version"
 INSTALLED_LIST=()
-for dir in "${DIRS[@]}"; do
-    [ -d "$dir" ] || continue
-    for app_dir in "$dir"/*; do
+if [ -d "$DIR" ]; then
+    for app_dir in "$DIR"/*; do
         [ -d "$app_dir" ] || continue
         pkg_name=$(basename "$app_dir")
         version_file="$app_dir/VERSION"
         if [ -f "$version_file" ]; then
+            # Versión instalada: se lee directamente (nunca es URL)
             installed_version=$(cat "$version_file")
         else
             installed_version="desconocida"
         fi
-        if [[ "$dir" == "$SYS_DIR" ]]; then
-            location="global"
-        else
-            location="user"
-        fi
-        INSTALLED_LIST+=("$pkg_name|$installed_version|$location")
+        INSTALLED_LIST+=("$pkg_name|$installed_version")
     done
-done
+fi
 
 if [ ${#INSTALLED_LIST[@]} -eq 0 ]; then
-    echo -e "${YELLOW}No hay paquetes instalados.${NC}"
+    echo -e "${YELLOW}No hay paquetes instalados globalmente.${NC}"
     exit 0
 fi
 
 # Obtener versiones del repositorio para cada paquete
 declare -A REPO_VERSIONS
 for entry in "${INSTALLED_LIST[@]}"; do
-    IFS='|' read -r pkg installed_version location <<< "$entry"
+    IFS='|' read -r pkg installed_version <<< "$entry"
     repo_file="$DATA_DIR/${pkg}.json"
     if [ -f "$repo_file" ]; then
         repo_version=$(jq -r '.version // "0.0.0"' "$repo_file" 2>/dev/null)
+        # El campo version de metadatos puede ser URL, resolver
+        if ! repo_version=$(resolve_version "$repo_version"); then
+            repo_version=""
+        fi
         [ -z "$repo_version" ] || [ "$repo_version" = "null" ] && repo_version="0.0.0"
-        REPO_VERSIONS["$pkg|$location"]="$repo_version"
+        REPO_VERSIONS["$pkg"]="$repo_version"
     else
-        REPO_VERSIONS["$pkg|$location"]=""
+        REPO_VERSIONS["$pkg"]=""
     fi
 done
 
 # Determinar paquetes actualizables
 UPDATABLE=()
 for entry in "${INSTALLED_LIST[@]}"; do
-    IFS='|' read -r pkg installed_version location <<< "$entry"
-    key="$pkg|$location"
-    repo_version="${REPO_VERSIONS[$key]:-}"
+    IFS='|' read -r pkg installed_version <<< "$entry"
+    repo_version="${REPO_VERSIONS[$pkg]:-}"
     [ -z "$repo_version" ] && continue  # sin repositorio, no se puede actualizar
 
     if [ "$installed_version" = "desconocida" ]; then
-        # Sin versión local, ofrecemos actualizar (pero mostramos "desconocida")
-        UPDATABLE+=("$entry|$repo_version|desconocida")
+        UPDATABLE+=("$pkg|$installed_version|$repo_version")
     else
         older=$(printf '%s\n' "$installed_version" "$repo_version" | sort -V | head -n1)
         if [ "$older" = "$installed_version" ] && [ "$installed_version" != "$repo_version" ]; then
-            UPDATABLE+=("$entry|$repo_version|$installed_version")
+            UPDATABLE+=("$pkg|$installed_version|$repo_version")
         fi
     fi
 done
 
 if [ ${#UPDATABLE[@]} -eq 0 ]; then
-    echo -e "${GREEN}Todos los paquetes están actualizados.${NC}"
+    echo -e "${GREEN}Todos los paquetes globales están actualizados.${NC}"
     exit 0
 fi
 
 # Mostrar tabla
 echo -e "${YELLOW}Paquetes con actualizaciones disponibles:${NC}"
-printf "${GREEN}%-4s %-20s %-15s %-15s %-10s${NC}\n" "Nº" "Paquete" "Instalado" "Disponible" "Ubicación"
-echo "----------------------------------------------------------------------"
+printf "${GREEN}%-4s %-20s %-15s %-15s${NC}\n" "Nº" "Paquete" "Instalado" "Disponible"
+echo "--------------------------------------------------------------"
 i=1
 for entry in "${UPDATABLE[@]}"; do
-    IFS='|' read -r pkg installed_version location repo_version installed_ver <<< "$entry"
-    printf "%-4d %-20s %-15s %-15s %-10s\n" "$i" "$pkg" "$installed_ver" "$repo_version" "$location"
+    IFS='|' read -r pkg installed_ver repo_version <<< "$entry"
+    printf "%-4d %-20s %-15s %-15s\n" "$i" "$pkg" "$installed_ver" "$repo_version"
     i=$((i+1))
 done
 
@@ -134,8 +149,8 @@ fi
 SELECTED_PKGS=()
 if [[ "$SELECTION" == "all" ]]; then
     for entry in "${UPDATABLE[@]}"; do
-        IFS='|' read -r pkg installed_version location repo_version installed_ver <<< "$entry"
-        SELECTED_PKGS+=("$pkg|$location")
+        IFS='|' read -r pkg installed_ver repo_version <<< "$entry"
+        SELECTED_PKGS+=("$pkg")
     done
 elif [[ "$SELECTION" == "none" ]]; then
     echo -e "${YELLOW}No se actualizará ningún paquete.${NC}"
@@ -145,8 +160,8 @@ else
         if [[ "$num" =~ ^[0-9]+$ ]] && [ "$num" -ge 1 ] && [ "$num" -le ${#UPDATABLE[@]} ]; then
             idx=$((num-1))
             entry="${UPDATABLE[$idx]}"
-            IFS='|' read -r pkg installed_version location repo_version installed_ver <<< "$entry"
-            SELECTED_PKGS+=("$pkg|$location")
+            IFS='|' read -r pkg installed_ver repo_version <<< "$entry"
+            SELECTED_PKGS+=("$pkg")
         else
             echo -e "${RED}Número inválido: $num${NC}"
         fi
@@ -160,18 +175,14 @@ fi
 
 # Actualizar
 echo -e "${GREEN}Actualizando paquetes seleccionados...${NC}"
-for entry in "${SELECTED_PKGS[@]}"; do
-    IFS='|' read -r pkg location <<< "$entry"
-    echo -e "${YELLOW}Actualizando $pkg ($location)...${NC}"
-    if [ "$location" = "global" ]; then
-        sudo casata install -y "$pkg"
-    else
-        casata install -y --user "$pkg"
-    fi
-    if [ $? -eq 0 ]; then
+for pkg in "${SELECTED_PKGS[@]}"; do
+    echo -e "${YELLOW}Actualizando $pkg (global)...${NC}"
+    if sudo casata install -y "$pkg"; then
         echo -e "${GREEN}✔ $pkg actualizado correctamente.${NC}"
+        log_event "UPGRADE_PACKAGE" "package=\"$pkg\" result=SUCCESS"
     else
         echo -e "${RED}✖ Falló la actualización de $pkg.${NC}"
+        log_event "UPGRADE_PACKAGE" "package=\"$pkg\" result=FAILURE"
     fi
 done
 

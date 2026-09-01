@@ -3,39 +3,52 @@
 
 COMANDOS:
 
-  add singrepo <URL>       → Añade un singrepo (una app)
-  add repo <URL>           → Añade un metarepo (un índice de apps)
-  add oficial              → Añade los metarepos oficiales, mantenidos por Lynds Corp.
-  add forge                → Añade los metarepos de desarrolladores verificados, supervisados por Lynds Corp. y open source
-  add community            → Añade los metarepos de la comunidad, no son supervisados por Lynds Corp.
-  add others               → Añade los metarepos que no encajan en ninguna de las categorías anteriores
+  add singrepo <URL>                     → Añade un singrepo (una app)
+  add repo <URL>                         → Añade un metarepo (un índice de apps)
+  add oficial                            → Añade los metarepos oficiales, mantenidos por Lynds Corp.
+  add forge                              → Añade los metarepos de desarrolladores verificados, supervisados por Lynds Corp. y open source
+  add community                          → Añade los metarepos de la comunidad, no son supervisados por Lynds Corp.
+  add others                             → Añade los metarepos que no encajan en ninguna de las categorías anteriores
 
-  install <apps> [-y] [-d] → -d = download, no lo instala (crear symlinks a rutas del sistema)
-  remove  <apps> [-y]      → -y = yes, aceptar todo. Perfecto para automatización
+  install <apps> [-y]                    → -y = yes, aceptar todo. Perfecto para automatización
+  remove  <apps> [-y]                    → -y = yes, aceptar todo. Perfecto para automatización
 
-  list [-v] [-d]           → Muestra las apps instaladas (v = versión|d = descripción)
+  list [-v] [-d]                         → Muestra las apps instaladas (v = versión|d = descripción)
 
-  info <app> [-l] [-r]     → Muestra información sobre la app (l = LICENSE|r = README.md)
+  info <app> [-l/-L] [-r]                → Muestra información sobre la app (l = --license-short/L = --license-full|r = README.md)
 
-  search <texto>           → Busca en la base de datos local
+  show <app> [-l/-L] [-r]                → Información técnica de cómo está instalada la aplicación (l = --license-short/L = --license-full|r = README.md)
 
-  update                   → Actualiza índices de metarepos y la base de datos local
+  search <texto>                         → Busca en la base de datos local
 
-  upgrade [-y]             → Actualiza paquetes instalados. y = yes, aceptar todo
+  update                                 → Actualiza índices de metarepos y la base de datos local
 
-  history [--lines N]      → Te lee el historial las líneas indicadas en N (N = número) 
-          [--clear]        → Limpia todo el historial
-          [--disable|--enable] → Desactiva|activa el historial
-          [--user nombre]  → Lee el historial completo de un usuario en concreto
-          []               → Al no poner nada, te lee el historial completo de tu usuario (si lo ejecutas con sudo, es del sistema)
+  upgrade [-y]                           → Actualiza paquetes instalados. y = yes, aceptar todo
+
+  history [--lines N]                    → Te lee el historial las líneas indicadas en N (N = número) 
+          [--clear]                      → Limpia todo el historial
+          [--disable|--enable]           → Desactiva|activa el historial
+          [--user nombre]                → Lee el historial completo de un usuario en concreto
+          []                             → Al no poner nada, te lee el historial completo de tu usuario (si lo ejecutas con sudo, es del sistema)
   
-  clean                    → Limpia huérfanos (singrepos/datos no referenciados)
+  clean                                  → Limpia huérfanos (singrepos/datos no referenciados)
 
-  show                     → Resumen de apps instaladas
+  download                               → Descarga los paquetes de los repositorios en vez de instalarlos. Perfecto para tenerlo offline
+           [--path RUTA]                 → Descarga el paquete en la ruta seleccionada en vez de la carpeta de Descargas
+           [--extract|-e]                → Descarga el paquete descomprimido
+
+  motd                                   → Muestra el mensaje del día de hoy
+       [dia de la semana (lunes...)]
+       [dia relativo a hoy (ayer...)]
+       [fecha absoluta (31-7-2026...)]
+       list                              → Muestra una lista de todos los días que tuviste mensaje del día
+       random                            → Muestra un mensaje del día local aleatorio
+
+
+  sudo casata motd                       → Actualiza el mensaje del día con el remoto
 
 OPCIONES COMUNES:
   -y          → responde "sí" a todo
-  -d          → solo descarga (install)
   -l / -r     → licencia / readme (info)
   -v / -d     → versión / descripción (list)
 

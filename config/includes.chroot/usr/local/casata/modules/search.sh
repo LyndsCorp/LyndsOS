@@ -1,9 +1,10 @@
 #!/bin/bash
 # /usr/local/casata/modules/search.sh
+# Copyright (C) 2026 David Baña Szymaniak
 
 DATA_DIR="/usr/local/casata/data"
 
-# Colores (ajústalos según tus definiciones)
+# Colores
 YELLOW="\e[33m"
 GREEN="\e[32m"
 RED="\e[31m"
@@ -33,7 +34,6 @@ if [ -z "$(ls -A "$DATA_DIR" 2>/dev/null)" ]; then
 fi
 
 # Detectar si el texto contiene metacaracteres glob (*, ?, [)
-# (Se mantiene por si buscas cosas como "m*" entre comillas)
 if [[ "$texto_lower" == *[*?[]* ]]; then
     # MODO PATRÓN GLOB
     for DB_FILE in "$DATA_DIR"/*.json; do

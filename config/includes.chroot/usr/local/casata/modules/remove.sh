@@ -1,7 +1,13 @@
 #!/bin/bash
 # /usr/local/casata/modules/remove.sh - elimina múltiples paquetes
+# Copyright (C) 2026 David Baña Szymaniak
 
 shopt -s nullglob
+
+# Cargar librería de historial
+if [ -f "/usr/local/casata/lib/history-lib.sh" ]; then
+    source "/usr/local/casata/lib/history-lib.sh"
+fi
 
 GLOBAL_ROOT="/usr/local/casata"
 
@@ -65,6 +71,7 @@ remove_one() {
             if [ -L "$TARGET_LINK" ]; then
                 rm -f "$TARGET_LINK"
                 echo -e "   [-] Enlace eliminado: ${RED}$LINK_NAME${NC}"
+                log_symlink_removed "$LINK_NAME" "$TARGET_LINK"
             else
                 if [ -e "$TARGET_LINK" ]; then
                     echo -e "   [!] Omitido (no es un enlace): $TARGET_LINK"
@@ -81,6 +88,7 @@ remove_one() {
     rm -rf "$APP_DIR"
 
     echo -e "${GREEN}¡$PKG_NAME desinstalado correctamente!${NC}"
+    log_package_removed "$PKG_NAME" "$INSTALL_TYPE" "SUCCESS"
     return 0
 }
 
@@ -115,6 +123,7 @@ for PKG in "${PACKAGES[@]}"; do
         echo -e "${GREEN}✔ $PKG desinstalado correctamente.${NC}"
     else
         echo -e "${RED}✖ Falló la desinstalación de $PKG.${NC}"
+        log_package_removed "$PKG" "$INSTALL_TYPE" "FAILURE"
         FAILED+=("$PKG")
     fi
 done

@@ -1,8 +1,14 @@
 #!/bin/bash
 #/usr/local/casata/modules/add.sh
+# Copyright (C) 2026 David Baña Szymaniak
 
 shopt -s nullglob
 set -euo pipefail
+
+# Cargar librería de historial
+if [ -f "/usr/local/casata/lib/history-lib.sh" ]; then
+    source "/usr/local/casata/lib/history-lib.sh"
+fi
 
 CASATA_ROOT="/usr/local/casata"
 METAREPOS_DIR="$CASATA_ROOT/repos/metarepos"
@@ -45,8 +51,10 @@ process_singrepo() {
             if wget -q --timeout=30 --tries=2 -O "$DATA_DIR/${pkg_name}.json" "$data_url"; then
                 chmod 644 "$DATA_DIR/${pkg_name}.json"
                 echo -e "${GREEN}OK${NC}"
+                log_repo_added "$pkg_name" "OK"
             else
                 echo -e "${RED}FALLO datos${NC}"
+                log_repo_added "$pkg_name" "ERROR"
             fi
         else
             echo -e "     ${RED}[!] JSON inválido${NC}"
@@ -79,6 +87,7 @@ process_metarepo() {
     chmod 644 "$target_file"
     TEMP_FILE=""
     echo -e "   ${GREEN}[✓] Metarepo guardado: $repo_name${NC}"
+    log_repo_added "$repo_name" "OK"
     echo -e "   ${YELLOW}Indexando...${NC}"
     jq -r 'to_entries[] | select(.key != "name" and .key != "metarepo") | .value' "$target_file" | while read -r singrepo_url; do
         [[ "$singrepo_url" == http* ]] && process_singrepo "$singrepo_url"

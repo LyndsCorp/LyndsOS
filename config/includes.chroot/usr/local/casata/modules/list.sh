@@ -17,7 +17,7 @@ NC='\033[0m'
 SHOW_VERSION=0
 SHOW_DESC=0
 
-# Procesar argumentos (si no hay, se queda todo en 0)
+# Procesar argumentos
 for arg in "$@"; do
     case "$arg" in
         -v|--version)
@@ -36,7 +36,6 @@ for arg in "$@"; do
             exit 1
             ;;
         *)
-            # Si hay un argumento que no es opción, ignorar (podría ser un nombre, pero no se usa)
             ;;
     esac
 done
@@ -86,10 +85,16 @@ for PKG_NAME in "${APPS_LIST[@]}"; do
     # Obtener versión si se pide
     VERSION=""
     if [ $SHOW_VERSION -eq 1 ]; then
+        version_file=""
         if [ -d "$SYS_DIR/$PKG_NAME" ] && [ -f "$SYS_DIR/$PKG_NAME/VERSION" ]; then
-            VERSION=$(cat "$SYS_DIR/$PKG_NAME/VERSION")
+            version_file="$SYS_DIR/$PKG_NAME/VERSION"
         elif [ -d "$USR_DIR/$PKG_NAME" ] && [ -f "$USR_DIR/$PKG_NAME/VERSION" ]; then
-            VERSION=$(cat "$USR_DIR/$PKG_NAME/VERSION")
+            version_file="$USR_DIR/$PKG_NAME/VERSION"
+        fi
+
+        if [ -n "$version_file" ]; then
+            # Versión instalada: se lee directamente (nunca es URL)
+            VERSION=$(cat "$version_file")
         else
             VERSION="desconocida"
         fi

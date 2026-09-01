@@ -14,6 +14,18 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
+# ------------------------------------------------------------
+# Detección de bugs y recomendación de reparación
+# ------------------------------------------------------------
+_sugerir_reparacion_casata() {
+    local codigo=$?
+    if [ "$codigo" -ne 0 ]; then
+        printf '%b\n' "${RED}Se detectó un error inesperado (código ${codigo}).${NC}" >&2
+        printf '%b\n' "${YELLOW}Recomendación: ejecuta 'sudo casata install casata' para reparar Casata.${NC}" >&2
+    fi
+}
+trap _sugerir_reparacion_casata ERR
+
 # Variable para limpieza
 TEMP_DIR=""
 
@@ -29,7 +41,6 @@ AUTO_YES=0
 for arg in "$@"; do
     case "$arg" in
         -y) AUTO_YES=1 ;;
-        -d) ;; # no aplica para actualización, lo ignoramos
     esac
 done
 
@@ -78,41 +89,46 @@ if [ $AUTO_YES -eq 0 ]; then
 fi
 
 TEMP_DIR=$(mktemp -d)
-ZIP_URL="https://github.com/LyndsCorp/Casata/archive/refs/heads/main.zip"
+TARBALL_URL="https://github.com/LyndsCorp/Casata/archive/refs/heads/main.tar.gz"
 echo -e "${YELLOW}Descargando desde GitHub...${NC}"
-if ! wget -q --show-progress -O "$TEMP_DIR/casata.zip" "$ZIP_URL"; then
+if ! wget -q --show-progress -O "$TEMP_DIR/casata.tar.gz" "$TARBALL_URL"; then
     echo -e "${RED}Error al descargar la actualización.${NC}"
     exit 1
 fi
 
-unzip -q "$TEMP_DIR/casata.zip" -d "$TEMP_DIR"
+echo -e "${YELLOW}Extrayendo archivos...${NC}"
+tar -xzf "$TEMP_DIR/casata.tar.gz" -C "$TEMP_DIR"
 EXTRACTED=$(find "$TEMP_DIR" -maxdepth 1 -type d -name "Casata-*" | head -1)
 if [ -z "$EXTRACTED" ] || [ ! -d "$EXTRACTED/usr" ]; then
-    echo -e "${RED}Error: Estructura del ZIP inválida.${NC}"
+    echo -e "${RED}Error: Estructura del archivo descargado inválida.${NC}"
     exit 1
 fi
 
-# Copiar binario principal
+# Instalar binario principal
 cp -f "$EXTRACTED/usr/bin/casata" /usr/bin/casata
 chmod +x /usr/bin/casata
 
 # Reemplazar módulos
 rm -rf "$GLOBAL_ROOT/modules"
-cp -r "$EXTRACTED/usr/local/casata/modules" "$GLOBAL_ROOT/"
+cp -a "$EXTRACTED/usr/local/casata/modules" "$GLOBAL_ROOT/"
 chmod +x "$GLOBAL_ROOT"/modules/*.sh
 
-# Copiar archivos informativos
-cp -f "$EXTRACTED/usr/local/casata/"{HELP,VERSION,WELCOME} "$GLOBAL_ROOT/" 2>/dev/null
+# Reemplazar librerías
+rm -rf "$GLOBAL_ROOT/lib"
+cp -a "$EXTRACTED/usr/local/casata/lib" "$GLOBAL_ROOT/"
+chmod +x "$GLOBAL_ROOT"/lib/*.sh
 
-# ===== FUSIÓN DE REPOSITORIOS (sin borrar los locales) =====
+# Copiar archivos informativos
+cp -f "$EXTRACTED/usr/local/casata/"{HELP,VERSION,WELCOME,SAVE_FILES.txt} "$GLOBAL_ROOT/" 2>/dev/null
+
+# Fusionar repositorios oficiales
 if [ -d "$EXTRACTED/usr/local/casata/repos" ]; then
     echo -e "${YELLOW}Fusionando repositorios oficiales (se conservan los personalizados)...${NC}"
-    cp -r "$EXTRACTED/usr/local/casata/repos/." "$GLOBAL_ROOT/repos/"
+    cp -a "$EXTRACTED/usr/local/casata/repos/." "$GLOBAL_ROOT/repos/"
     echo -e "${GREEN}Repositorios actualizados correctamente.${NC}"
 else
     echo -e "${YELLOW}Aviso: No se encontró la carpeta 'repos' en la actualización; se mantiene la versión actual.${NC}"
 fi
-# ==========================================================
 
 echo -e "${GREEN}Casata actualizado correctamente a la versión $REMOTE_VERSION.${NC}"
 exit 0

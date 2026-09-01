@@ -1,16 +1,17 @@
 #!/bin/bash
 
 # /usr/local/casata/modules/update.sh
-# Copyright (C) 2026, GPL v3+, Lynds Corp., Aros Legendarios, David Baña Szymaniak
-# Script de actualización de repositorios de Casata (versión 1.2.1)
-
-# Novedades:
-#   - Procesa primero los metarepos listados en PRIORITY (en orden).
-#   - Pregunta solo si dos metarepos en la misma ejecución intentan escribir el mismo singrepo.
-#   - Flag -y: omite todas las nuevas versiones en caso de conflicto dentro de la misma ejecución.
+# Copyright (C) 2026 David Baña Szymaniak
+# GPL v3 License
+# Script de actualización de repositorios de Casata
 
 shopt -s nullglob
 set -euo pipefail
+
+# Cargar librería de historial
+if [ -f "/usr/local/casata/lib/history-lib.sh" ]; then
+    source "/usr/local/casata/lib/history-lib.sh"
+fi
 
 CASATA_ROOT="/usr/local/casata"
 METAREPOS_DIR="$CASATA_ROOT/repos/metarepos"
@@ -27,13 +28,21 @@ NC='\033[0m'
 mkdir -p "$METAREPOS_DIR" "$SINGREPOS_DIR" "$DATA_DIR"
 
 # --- Manejo de argumentos ---
-AUTO_SKIP=0   # Con -y se saltan todas las sobrescrituras en conflictos de la misma ejecución
-for arg in "$@"; do
-    case "$arg" in
-        -y) AUTO_SKIP=1 ;;
-        *)
-            echo -e "${RED}Opción desconocida: $arg${NC}"
+AUTO_SKIP=0
+TARGET_METAREPOS=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -y)
+            AUTO_SKIP=1
+            shift
+            ;;
+        -*)
+            echo -e "${RED}Opción desconocida: $1${NC}"
             exit 1
+            ;;
+        *)
+            TARGET_METAREPOS+=("$1")
+            shift
             ;;
     esac
 done
@@ -53,15 +62,91 @@ trap cleanup EXIT
 
 echo -e "${YELLOW}Actualizando ecosistema de paquetes Casata...${NC}"
 
-if [ -z "$(ls -A "$METAREPOS_DIR"/*.json 2>/dev/null)" ]; then
+METAREPO_FILES=("$METAREPOS_DIR"/*.json)
+if [ ${#METAREPO_FILES[@]} -eq 0 ]; then
     echo -e "${RED}No hay metarepos agregados. Usa 'casata add repo URL' primero.${NC}"
     exit 0
+fi
+
+# --- Función de validación de nombre de metarepo ---
+valid_metarepo_name() {
+    local name="$1"
+    [[ "$name" != */* ]] && [[ -n "$name" ]]
+}
+
+# --- Función para resolver un nombre de metarepo a su archivo ---
+resolver_metarepo() {
+    local name="$1"
+    local file=""
+
+    if ! valid_metarepo_name "$name"; then
+        return 1
+    fi
+
+    if [ -f "$METAREPOS_DIR/$name" ]; then
+        file="$METAREPOS_DIR/$name"
+    elif [ -f "$METAREPOS_DIR/$name.json" ]; then
+        file="$METAREPOS_DIR/$name.json"
+    else
+        return 1
+    fi
+    printf '%s' "$file"
+}
+
+# --- Leer PRIORITY (si existe) ---
+declare -a PRIORITY_FILES=()
+if [ -f "$PRIORITY_FILE" ]; then
+    while IFS= read -r line; do
+        line=$(echo "$line" | sed 's/#.*//; s/^[[:space:]]*//; s/[[:space:]]*$//')
+        [ -z "$line" ] && continue
+
+        # Solo nombres simples, sin rutas
+        if ! valid_metarepo_name "$line"; then
+            echo -e "${YELLOW}Advertencia: entrada inválida en PRIORITY ignorada: '$line'${NC}"
+            continue
+        fi
+
+        if [ -f "$METAREPOS_DIR/$line" ]; then
+            PRIORITY_FILES+=("$METAREPOS_DIR/$line")
+        elif [ -f "$METAREPOS_DIR/$line.json" ]; then
+            PRIORITY_FILES+=("$METAREPOS_DIR/$line.json")
+        fi
+    done < "$PRIORITY_FILE"
+fi
+
+# --- Resolver metarepos solicitados ---
+declare -a REQUESTED_FILES=()
+if [ ${#TARGET_METAREPOS[@]} -gt 0 ]; then
+    for repo in "${TARGET_METAREPOS[@]}"; do
+        if ! valid_metarepo_name "$repo"; then
+            echo -e "${RED}Nombre de metarepo inválido: '$repo'. No se permiten rutas (nombres con '/').${NC}"
+            exit 1
+        fi
+
+        resolved=$(resolver_metarepo "$repo") || {
+            echo -e "${RED}No se encontró el metarepo '$repo' en los metarepos añadidos.${NC}"
+            exit 1
+        }
+
+        # Evitar duplicados
+        duplicate=false
+        for f in "${REQUESTED_FILES[@]}"; do
+            if [ "$f" = "$resolved" ]; then
+                duplicate=true
+                break
+            fi
+        done
+
+        if [ "$duplicate" = false ]; then
+            REQUESTED_FILES+=("$resolved")
+        fi
+    done
 fi
 
 # ------------------------------------------------------------
 # Variables globales para control de conflictos y prioridad
 # ------------------------------------------------------------
-declare -A SINGREPO_ORIGIN   # [nombre_pkg]="nombre_metarepo" (solo en esta ejecución)
+declare -A SINGREPO_ORIGIN
 declare -A PROCESSED_METAREPOS
 ERRORES=0
 
@@ -82,14 +167,17 @@ procesar_metarepo() {
                 mv "$TEMP_META" "$REPO_FILE"
                 chmod 644 "$REPO_FILE"
                 echo -e "${GREEN}✓ Metarepo actualizado${NC}"
+                log_repo_updated "$(jq -r '.name // "desconocido"' "$REPO_FILE")" "OK"
             else
                 echo -e "${RED}✗ ERROR: falló la descarga del metarepo (JSON inválido). Conservando versión anterior.${NC}"
                 rm -f "$TEMP_META"
+                log_repo_updated "$(jq -r '.name // "desconocido"' "$REPO_FILE")" "ERROR"
                 ((ERRORES++))
             fi
         else
             echo -e "${RED}✗ ERROR: falló la descarga del metarepo (error de red o servidor). Conservando metarepo local.${NC}"
             rm -f "$TEMP_META"
+            log_repo_updated "$(jq -r '.name // "desconocido"' "$REPO_FILE")" "ERROR"
             ((ERRORES++))
         fi
     fi
@@ -102,11 +190,11 @@ procesar_metarepo() {
         [ -z "$PKG_NAME" ] || [ -z "$SINGREPO_URL" ] && continue
         echo -e "  -> Procesando paquete: ${YELLOW}$PKG_NAME${NC}"
 
-        # --- Descargar singrepo ---
         TEMP_SING=$(mktemp /tmp/casata_update_XXXXXX.tmp)
         if ! wget -q --timeout=20 --tries=2 -O "$TEMP_SING" "$SINGREPO_URL"; then
             echo -e "     ${RED}✗ ERROR: falló la descarga del singrepo (error de red o servidor).${NC}"
             rm -f "$TEMP_SING"
+            log_repo_updated "$PKG_NAME" "ERROR"
             ((ERRORES++))
             continue
         fi
@@ -114,16 +202,15 @@ procesar_metarepo() {
         if ! jq empty "$TEMP_SING" 2>/dev/null; then
             echo -e "     ${RED}✗ ERROR: falló la descarga del singrepo (JSON inválido).${NC}"
             rm -f "$TEMP_SING"
+            log_repo_updated "$PKG_NAME" "ERROR"
             ((ERRORES++))
             continue
         fi
 
         SINGREPO_DEST="$SINGREPOS_DIR/${PKG_NAME}.json"
 
-        # --- Detección de conflicto SOLO si otro metarepo YA escribió este paquete en esta ejecución ---
         if [[ -v SINGREPO_ORIGIN[$PKG_NAME] ]]; then
             origen_anterior="${SINGREPO_ORIGIN[$PKG_NAME]}"
-            # Solo hay conflicto si el origen anterior es distinto al metarepo actual
             if [ "$origen_anterior" != "$REPO_NAME" ]; then
                 echo -e "     ${YELLOW}⚠ Conflicto: '$PKG_NAME' ya fue actualizado por '$origen_anterior'."
                 echo -e "     El metarepo '$REPO_NAME' también intenta sobrescribirlo.${NC}"
@@ -150,21 +237,18 @@ procesar_metarepo() {
                         ;;
                 esac
             fi
-            # Si el origen anterior es el mismo no se pregunta, se sobrescribe
         else
-            # El singrepo ya existía de antes pero no ha sido escrito en esta ejecución -> actualización normal
             if [ -f "$SINGREPO_DEST" ]; then
                 echo -e "     ${YELLOW}ℹ Actualizando singrepo...${NC}"
             fi
         fi
 
-        # --- Instalar el singrepo ---
         mv "$TEMP_SING" "$SINGREPO_DEST"
         chmod 644 "$SINGREPO_DEST"
         SINGREPO_ORIGIN["$PKG_NAME"]="$REPO_NAME"
         echo -e "     ${GREEN}✓ Singrepo actualizado${NC}"
+        log_repo_updated "$PKG_NAME" "OK"
 
-        # --- Descargar metadatos (data_url) ---
         DATA_URL=$(jq -r '.data_url // empty' "$SINGREPO_DEST")
         [ -z "$DATA_URL" ] && { echo -e "     ${YELLOW}⚠ ERROR DEL SERVIDOR: Sin data_url${NC}"; continue; }
 
@@ -189,47 +273,61 @@ procesar_metarepo() {
 }
 
 # ------------------------------------------------------------
-# 1. Cargar metarepos prioritarios desde PRIORITY
+# Procesar metarepos
 # ------------------------------------------------------------
-declare -a PRIORITY_FILES=()
-if [ -f "$PRIORITY_FILE" ]; then
-    #echo -e "${BLUE}Leyendo metarepos prioritarios desde PRIORITY...${NC}"
-    while IFS= read -r line; do
-        # Eliminar espacios e ignorar comentarios/vacías
-        line=$(echo "$line" | sed 's/#.*//; s/^[[:space:]]*//; s/[[:space:]]*$//')
-        [ -z "$line" ] && continue
+if [ ${#REQUESTED_FILES[@]} -gt 0 ]; then
+    # Ordenar los solicitados respetando PRIORITY
+    declare -A REQUESTED_SET
+    for f in "${REQUESTED_FILES[@]}"; do
+        REQUESTED_SET["$f"]=1
+    done
 
-        # Buscar el archivo .json correspondiente
-        if [ -f "$METAREPOS_DIR/$line" ]; then
-            PRIORITY_FILES+=("$METAREPOS_DIR/$line")
-        elif [ -f "$METAREPOS_DIR/$line.json" ]; then
-            PRIORITY_FILES+=("$METAREPOS_DIR/$line.json")
+    declare -A ORDERED_SET
+    declare -a ORDERED_TARGETS=()
+
+    # Primero los que están en PRIORITY, en el orden de PRIORITY
+    for pf in "${PRIORITY_FILES[@]}"; do
+        if [[ -v REQUESTED_SET["$pf"] ]] && [ -z "${ORDERED_SET["$pf"]+x}" ]; then
+            ORDERED_TARGETS+=("$pf")
+            ORDERED_SET["$pf"]=1
         fi
-    done < "$PRIORITY_FILE"
-fi
+    done
 
-# ------------------------------------------------------------
-# 2. Procesar metarepos en orden: primero PRIORITY, luego el resto
-# ------------------------------------------------------------
-TOTAL_PRIORITY=${#PRIORITY_FILES[@]}
-echo -e "${BLUE}Procesando $TOTAL_PRIORITY metarepo(s) prioritario(s)...${NC}"
-for REPO_FILE in "${PRIORITY_FILES[@]}"; do
-    procesar_metarepo "$REPO_FILE"
-    PROCESSED_METAREPOS["$REPO_FILE"]=1
-done
+    # Después el resto, en el orden dado por el usuario
+    for f in "${REQUESTED_FILES[@]}"; do
+        if [ -z "${ORDERED_SET["$f"]+x}" ]; then
+            ORDERED_TARGETS+=("$f")
+            ORDERED_SET["$f"]=1
+        fi
+    done
 
-echo -e "\n${BLUE}Procesando el resto de metarepos...${NC}"
-for REPO_FILE in "$METAREPOS_DIR"/*.json; do
-    [ -f "$REPO_FILE" ] || continue
-    if [ -z "${PROCESSED_METAREPOS["$REPO_FILE"]+x}" ]; then
+    TOTAL_METAREPOS=${#ORDERED_TARGETS[@]}
+    echo -e "\n${BLUE}Actualizando $TOTAL_METAREPOS metarepo(s) especificado(s)...${NC}"
+    for REPO_FILE in "${ORDERED_TARGETS[@]}"; do
         procesar_metarepo "$REPO_FILE"
-    fi
-done
+    done
+else
+    # Sin metarepos especificados: usar PRIORITY y luego el resto
+    TOTAL_PRIORITY=${#PRIORITY_FILES[@]}
+    echo -e "${BLUE}Procesando $TOTAL_PRIORITY metarepo(s) prioritario(s)...${NC}"
+    for REPO_FILE in "${PRIORITY_FILES[@]}"; do
+        procesar_metarepo "$REPO_FILE"
+        PROCESSED_METAREPOS["$REPO_FILE"]=1
+    done
+
+    echo -e "\n${BLUE}Procesando el resto de metarepos...${NC}"
+    for REPO_FILE in "${METAREPO_FILES[@]}"; do
+        if [ -z "${PROCESSED_METAREPOS["$REPO_FILE"]+x}" ]; then
+            procesar_metarepo "$REPO_FILE"
+        fi
+    done
+
+    TOTAL_METAREPOS=${#METAREPO_FILES[@]}
+fi
 
 # ------------------------------------------------------------
 # Resumen final
 # ------------------------------------------------------------
-TOTAL_METAREPOS=$(ls -1 "$METAREPOS_DIR"/*.json 2>/dev/null | wc -l)
 echo ""
 if [ $ERRORES -eq 0 ]; then
     echo -e "${GREEN}════════════════════════════════════════${NC}"
