@@ -1,5 +1,3 @@
-plymouth
-plymouth-themes
 plasma-desktop
 plasma-workspace
 kscreen
@@ -107,14 +105,12 @@ python3-requests
 python3-venv
 python3-pip
 python3-dev
-python3-dbus
-python3-gi
-gir1.2-glib-2.0
 build-essential
 ffmpeg
 mesa-utils
 libgl1-mesa-dri
 libreoffice-qt6
 libreoffice-kf6
+hunspell-es
 jq
 libnotify-bin
